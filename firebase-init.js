@@ -1,25 +1,13 @@
 /* =========================================================================
    SENJA POS — Konfigurasi Firebase
-   =========================================================================
-   GANTI 6 nilai di bawah ini dengan punya Bapak sendiri, dari:
-   Firebase Console → Project Settings → General → scroll ke "Your apps" → Web app → SDK setup and configuration
-
-   Kalau belum punya project Firebase:
-   1. Buka https://console.firebase.google.com
-   2. "Add project" → kasih nama (misal "senja-pos") → lanjutkan
-   3. Di dashboard project, klik ikon "</>"  (Web) untuk daftarkan web app
-   4. Kasih nickname app (misal "senja-pos-web"), TIDAK perlu centang Firebase Hosting
-   5. Copy object firebaseConfig yang muncul, tempel gantikan yang di bawah ini
-   6. Di sidebar kiri, buka "Build" → "Firestore Database" → "Create database"
-      → pilih "Start in test mode" untuk awal (bisa diperketat nanti) → pilih lokasi asia-southeast (Jakarta/Singapore)
    ========================================================================= */
 const firebaseConfig = {
-  apiKey: "GANTI_DENGAN_API_KEY_ANDA",
-  authDomain: "GANTI.firebaseapp.com",
-  projectId: "GANTI_PROJECT_ID",
-  storageBucket: "GANTI.appspot.com",
-  messagingSenderId: "GANTI_SENDER_ID",
-  appId: "GANTI_APP_ID"
+  apiKey: "AIzaSyBqh3U2NafYRy-2gcPVzU6xMKRbmOV9Wug",
+  authDomain: "senja-pos.firebaseapp.com",
+  projectId: "senja-pos",
+  storageBucket: "senja-pos.firebasestorage.app",
+  messagingSenderId: "200213038165",
+  appId: "1:200213038165:web:79e74a742244073bf0c0dc"
 };
 
 firebase.initializeApp(firebaseConfig);
