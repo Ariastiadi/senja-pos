@@ -3,7 +3,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bcrypt.js/2.4.3/bcrypt.min.js"></script>
 <style>
   body{margin:0;min-height:100vh;display:grid;place-items:center;background:#1a1310;font-family:'Plus Jakarta Sans',sans-serif;color:#f3ead9;
     background-image:radial-gradient(rgba(224,138,46,.08) 1px,transparent 1px);background-size:26px 26px}
@@ -42,10 +41,19 @@
 
 <script src="firebase-init.js"></script>
 <script>
-const bcrypt = dcodeIO.bcrypt;
+/* Hash PIN lokal — HARUS sama persis dengan yang di login.html */
+function pinHash(pin){
+  var s = String(pin), h1 = 5381, h2 = 52711;
+  for (var i = 0; i < s.length; i++){
+    var c = s.charCodeAt(i);
+    h1 = ((h1 << 5) + h1 + c) | 0;
+    h2 = ((h2 << 5) + h2 + c * 7) | 0;
+  }
+  return 'v1$' + (h1 >>> 0).toString(16) + (h2 >>> 0).toString(16);
+}
+
 const logBox = document.getElementById('log');
 function log(msg){ logBox.innerHTML += msg + '<br>'; logBox.scrollTop = logBox.scrollHeight; }
-function bcryptHash(pin){ return new Promise((res,rej)=>bcrypt.hash(pin, 8, (e,h)=>e?rej(e):res(h))); }
 
 const CATEGORIES = [
   ['kopi','Kopi','☕','cafe',1],['minuman','Non-Kopi','🍹','cafe',2],['makanan','Makanan','🍛','cafe',3],
@@ -54,7 +62,6 @@ const CATEGORIES = [
   ['laundry','Laundry','🧺','hotel',3],['layanan','Layanan','🛎️','hotel',4],['spa','Spa & Wellness','💆','hotel',5],
 ];
 
-// [kategori_kode, nama, harga, emoji, populer]
 const PRODUCTS = [
   ['kopi','Espresso',18000,'☕',0],['kopi','Americano',22000,'☕',0],
   ['kopi','Kopi Susu Senja',24000,'🌅',1],['kopi','Cappuccino',28000,'☕',0],
@@ -89,7 +96,6 @@ const PRODUCTS = [
   ['spa','Sauna & Jacuzzi',100000,'🧖',0],['spa','Paket Honeymoon',450000,'💞',0],
 ];
 
-// [nama, satuan, stok, stok_min, harga_satuan]
 const INGREDIENTS = [
   ['Biji Kopi Arabika','gr',4500,500,350],['Susu Segar','ml',6000,1000,22],
   ['Gula Aren Cair','ml',2500,400,45],['Bubuk Matcha','gr',800,150,180],
@@ -112,7 +118,6 @@ const INGREDIENTS = [
   ['Air Mineral Galon','galon',3,2,21000],
 ];
 
-// [nama produk, nama bahan, qty]
 const RECIPES = [
   ['Espresso','Biji Kopi Arabika',18],['Americano','Biji Kopi Arabika',18],
   ['Kopi Susu Senja','Biji Kopi Arabika',18],['Kopi Susu Senja','Susu Segar',120],['Kopi Susu Senja','Gula Aren Cair',25],
@@ -204,8 +209,8 @@ async function install(){
 
     log('Membuat akun pengguna…');
     for (const [nama,username,pin,role] of USERS) {
-      const pinHash = await bcryptHash(pin);
-      await db.collection('users').doc(username).set({nama,username,pinHash,role});
+      const hash = pinHash(pin);
+      await db.collection('users').doc(username).set({nama,username,pinHash:hash,role});
     }
     log('✓ ' + USERS.length + ' akun dibuat');
 
