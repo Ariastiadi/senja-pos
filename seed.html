@@ -42,6 +42,7 @@
 
 <script src="firebase-init.js"></script>
 <script>
+const bcrypt = dcodeIO.bcrypt;
 const logBox = document.getElementById('log');
 function log(msg){ logBox.innerHTML += msg + '<br>'; logBox.scrollTop = logBox.scrollHeight; }
 function bcryptHash(pin){ return new Promise((res,rej)=>bcrypt.hash(pin, 8, (e,h)=>e?rej(e):res(h))); }
@@ -92,7 +93,7 @@ const PRODUCTS = [
 const INGREDIENTS = [
   ['Biji Kopi Arabika','gr',4500,500,350],['Susu Segar','ml',6000,1000,22],
   ['Gula Aren Cair','ml',2500,400,45],['Bubuk Matcha','gr',800,150,180],
-  ['Cokelat Bubuk','gr',1200,200,120],['Teh Celup','pcs',2,30,900], // demo: menipis
+  ['Cokelat Bubuk','gr',1200,200,120],['Teh Celup','pcs',2,30,900],
   ['Lemon','buah',24,6,4500],['Alpukat','buah',18,5,8500],
   ['Beras','gr',15000,3000,16],['Telur','butir',90,24,2600],
   ['Mie Telur','gr',4000,800,45],['Daging Ayam','gr',5000,1000,42],
@@ -102,7 +103,7 @@ const INGREDIENTS = [
   ['Kulit Dimsum','lembar',60,20,750],['Daging Cincang','gr',1600,400,92],
   ['Croissant Frozen','pcs',22,6,11500],['Gelato Vanilla','scoop',35,10,7500],
   ['Gelato Cokelat','scoop',30,10,7500],['Brownies Adonan','porsi',15,5,9800],
-  ['Keju Krim','gr',900,200,105],['Ladyfinger Biscuit','gr',0,150,130], // demo: habis
+  ['Keju Krim','gr',900,200,105],['Ladyfinger Biscuit','gr',0,150,130],
   ['Cendol','gr',1800,400,38],['Santan','ml',3000,600,28],['Durian','gr',1000,250,140],
   ['Deterjen Laundry','ml',8000,1500,24],['Pelembut Pakaian','ml',5000,1000,32],
   ['Cola Kaleng','pcs',36,12,8500],['Bir Bintang','botol',24,6,21000],
@@ -171,7 +172,7 @@ async function install(){
     log('✓ ' + CATEGORIES.length + ' kategori dibuat');
 
     log('Membuat produk…');
-    const prodId = {}; // nama -> id string
+    const prodId = {};
     let pi = 1;
     for (const [kategori_kode,nama,harga,emoji,populer] of PRODUCTS) {
       const id = 'p' + (pi++);
@@ -181,7 +182,7 @@ async function install(){
     log('✓ ' + PRODUCTS.length + ' produk dibuat');
 
     log('Membuat data bahan baku…');
-    const ingId = {}; // nama -> id string
+    const ingId = {};
     let ii = 1;
     for (const [nama,satuan,stok,stok_min,harga_satuan] of INGREDIENTS) {
       const id = 'i' + (ii++);
