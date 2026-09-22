@@ -82,6 +82,7 @@ header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;ba
 .tk-meta{font-size:12px;color:var(--muted);margin-top:4px;font-weight:600}
 .tk-meta b{color:var(--amber-deep)}
 .tk-clear{font-size:11px;font-weight:800;color:var(--red);background:#fbe9e5;border-radius:8px;padding:6px 10px}
+.tk-clear:hover{background:#f5d2ca}
 .tk-body{flex:1;overflow-y:auto;padding:8px 18px;scrollbar-width:thin}
 .tk-empty{text-align:center;padding:46px 10px;color:var(--muted)}
 .line{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid #f0e8d5;animation:rise .25s}
@@ -107,7 +108,7 @@ header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;ba
 .seg-mini{display:flex;background:var(--paper);border-radius:8px;padding:2px;gap:2px;border:1px solid var(--line)}
 .seg-mini button{padding:4px 9px;border-radius:6px;font-size:11px;font-weight:800;color:var(--muted)}
 .seg-mini button.on{background:var(--roast);color:#f5e8cf}
-.btn-pay{width:100%;margin-top:12px;padding:15px 18px;border-radius:14px;display:flex;justify-content:space-between;align-items:center;font-family:var(--disp);font-weight:800;font-size:17px;color:#fdf6e9;background:linear-gradient(115deg,var(--green-deep),var(--green));transition:.2s}
+.btn-pay{width:100%;margin-top:12px;padding:15px 18px;border-radius:14px;display:flex;justify-content:space-between;align-items:center;font-family:var(--disp);font-weight:800;font-size:17px;color:#fdf6e9;background:linear-gradient(115deg,var(--green-deep),var(--green))}
 .btn-pay:not(:disabled):hover{transform:translateY(-2px)}
 .btn-pay:disabled{background:#cfc7b4;cursor:not-allowed}
 .btn-pay .v{font-family:var(--mono);font-size:16px}
@@ -133,7 +134,7 @@ header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;ba
 .pay-info .lbl{font-weight:800;font-size:13px}
 .pay-info .val{font-family:var(--mono);font-weight:700;font-size:17px}
 .pay-info .val.ok{color:var(--green-deep)}.pay-info .val.no{color:var(--red)}
-.btn-confirm{width:100%;margin-top:14px;padding:15px;border-radius:14px;font-family:var(--disp);font-weight:800;font-size:16px;color:#fff;background:linear-gradient(115deg,var(--amber),var(--amber-deep));transition:.2s}
+.btn-confirm{width:100%;margin-top:14px;padding:15px;border-radius:14px;font-family:var(--disp);font-weight:800;font-size:16px;color:#fff;background:linear-gradient(115deg,var(--amber),var(--amber-deep))}
 .btn-confirm:disabled{background:#cfc7b4;cursor:not-allowed}
 .pay-note{text-align:center;font-size:12.5px;color:var(--muted);font-weight:600;padding:8px 0 2px}
 .receipt-wrap{background:repeating-linear-gradient(45deg,#efe7d5,#efe7d5 10px,#ece3cf 10px,#ece3cf 20px);padding:24px 20px;display:flex;justify-content:center;overflow-y:auto}
@@ -190,7 +191,14 @@ header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;ba
 @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
 .pop{animation:pop .35s}
 @media(max-width:1080px){body{overflow:auto;height:auto}.app{height:auto}.layout{grid-template-columns:1fr;height:auto}.grid{height:auto;max-height:480px}.kpis{grid-template-columns:repeat(2,1fr)}}
-@media print{body *{visibility:hidden}#receiptPaper,#receiptPaper *{visibility:visible}#receiptPaper{position:absolute;left:0;top:0;width:72mm;box-shadow:none;background:#fff}.receipt-wrap{background:#fff;padding:0}}
+@media print{
+  body *{visibility:hidden}
+  #receiptPaper,#receiptPaper *{visibility:visible}
+  #receiptPaper{position:absolute;left:0;top:0;width:72mm;box-shadow:none;background:#fff}
+  .receipt-wrap{background:#fff;padding:0}
+  .m-actions{display:none}
+  .overlay{background:none;position:absolute;inset:0}
+}
 </style></head>
 <body>
 
@@ -295,6 +303,25 @@ header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;ba
 
 <script src="firebase-init.js"></script>
 <script>
+/* ===== Helper Mandiri (Anti Gagal) ===== */
+function rp(n){ return 'Rp ' + Math.round(n).toLocaleString('id-ID'); }
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ===== Audio Feedback ===== */
+let AC;
+function tone(f,d=.07,delay=0){
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(),g=AC.createGain();
+    o.type='triangle';o.frequency.value=f;
+    g.gain.setValueAtTime(.001,AC.currentTime+delay);
+    g.gain.exponentialRampToValueAtTime(.06,AC.currentTime+delay+.01);
+    g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+delay+d);
+    o.connect(g).connect(AC.destination);
+    o.start(AC.currentTime+delay);o.stop(AC.currentTime+delay+d+.05);
+  }catch(e){}
+}
+
 const $ = id => document.getElementById(id);
 const OT = {dinein:'Dine In',takeaway:'Take Away',room:'Kamar Hotel'};
 const PM = {cash:'Tunai',qris:'QRIS',card:'Kartu Debit',ewallet:'E-Wallet'};
@@ -442,16 +469,19 @@ function addToCart(id){
   line ? line.q++ : S.cart.push({id,q:1});
   renderCart(); renderProducts();
   const b=$('orderNo'); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+  tone(720,.06);
 }
 function changeQty(id,d){
   const line = S.cart.find(l=>l.id===id); if(!line) return;
   line.q += d;
   if(line.q<=0) S.cart = S.cart.filter(l=>l.id!==id);
   renderCart(); renderProducts();
+  tone(d>0?720:300,.05);
 }
-function removeLine(id){ S.cart = S.cart.filter(l=>l.id!==id); renderCart(); renderProducts(); }
+function removeLine(id){ S.cart = S.cart.filter(l=>l.id!==id); renderCart(); renderProducts(); tone(220,.08); }
 function clearCart(){
   if(!S.cart.length) return;
+  if(!confirm('Hapus semua pesanan di keranjang?')) return;
   S.cart=[]; $('discVal').value='';
   renderCart(); renderProducts(); toast('Pesanan dibersihkan','🧹');
 }
@@ -597,14 +627,67 @@ async function confirmPay(){
         });
       }
     }
+    /* ===== Jurnal otomatis (akuntansi double-entry, diskon dipotong langsung dari kredit pendapatan agar tetap balance tanpa akun baru) ===== */
+    const cashAcc = S.method === 'cash' ? '1101' : '1102';
+    const jLines = [
+      { acc: cashAcc, name: S.method === 'cash' ? 'Kas' : 'Bank/E-Wallet', debit: c.total, credit: 0 },
+      { acc: '2101', name: 'Utang PB1', debit: 0, credit: c.tax }
+    ];
+    const revMap = { '4101':'Pendapatan Kafe', '4102':'Pendapatan Kamar', '4103':'Pendapatan Room Service', '4104':'Pendapatan Laundry', '4105':'Pendapatan Spa', '4106':'Pendapatan Minibar' };
+    const getRevAcc = (kat) => {
+      if(['kopi','minuman','makanan','camilan','dessert'].includes(kat)) return '4101';
+      if(kat === 'roomservice') return '4103'; if(kat === 'minibar') return '4106';
+      if(kat === 'laundry') return '4104'; if(kat === 'spa') return '4105'; return '4102';
+    };
+    const revGroups = {};
+    S.cart.forEach(l => {
+      const p = byId(l.id); const rAcc = getRevAcc(p.kategori_kode);
+      if(!revGroups[rAcc]) revGroups[rAcc] = 0;
+      revGroups[rAcc] += p.harga * l.q;
+    });
+    if (c.disc > 0 && c.sub > 0) {
+      const ratio = (c.sub - c.disc) / c.sub;
+      let running = 0;
+      const keys = Object.keys(revGroups);
+      keys.forEach((acc,i) => {
+        if (i < keys.length - 1) {
+          revGroups[acc] = Math.round(revGroups[acc] * ratio);
+          running += revGroups[acc];
+        } else {
+          revGroups[acc] = (c.sub - c.disc) - running;
+        }
+      });
+    }
+    Object.keys(revGroups).forEach(acc => {
+      jLines.push({ acc, name: revMap[acc], debit: 0, credit: revGroups[acc] });
+    });
+    let totalHpp = 0;
+    for(const it of S.cart){
+      const rs = await db.collection('products').doc(it.id).collection('recipes').get();
+      for(const r of rs.docs){
+        const ing = ING.find(i => i.id === r.id);
+        if(ing && r.data().qty > 0) totalHpp += (r.data().qty * it.q) * (ing.harga_satuan || 0);
+      }
+    }
+    if(totalHpp > 0) {
+      jLines.push({ acc: '5101', name: 'HPP Kafe', debit: totalHpp, credit: 0 });
+      jLines.push({ acc: '1110', name: 'Persediaan Bahan', debit: 0, credit: totalHpp });
+    }
+    await db.collection('journals').add({
+      no: 'JRN-' + no, date: firebase.firestore.Timestamp.now(),
+      desc: 'Penjualan ' + no, source: 'POS-SALE', lines: jLines
+    });
+
     closeOv('ovPay');
     S.cart=[]; $('discVal').value='';
     ['tableNo','guestTA','roomNo','guestName'].forEach(id=>$(id).value='');
     renderCart(); renderProducts();
+    tone(660,.09);tone(990,.14,.1);
     toast('Transaksi '+no+' tersinkron ke semua device!','🎉');
     showReceipt({...tx, time: Date.now()});
   }catch(err){
     toast('Gagal menyimpan: '+err.message,'❌');
+    tone(220,.2);
   }finally{
     btn.disabled=false; btn.textContent='Konfirmasi Pembayaran';
   }
@@ -710,6 +793,4 @@ $('discVal').addEventListener('input',renderCart);
 $('paidInput').addEventListener('input',updatePayUI);
 ['tableNo','guestTA','roomNo','guestName'].forEach(id=>$(id).addEventListener('input',updateTicketHead));
 </script>
-<link rel="stylesheet" href="deai.css">
-<script src="deai.js"></script>
 </body></html>
