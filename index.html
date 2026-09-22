@@ -292,7 +292,7 @@ header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;ba
   </div></div></div>
 
 <div class="overlay" id="ovReceipt"><div class="modal m-w-r"><div class="receipt-wrap"><div class="receipt" id="receiptPaper"></div></div>
-  <div class="m-actions"><button class="btn2 ghost" onclick="closeOv('ovReceipt')">← Kembali</button><button class="btn2 solid" onclick="window.print()">🖨️ Cetak Struk</button></div></div></div>
+  <div class="m-actions"><button class="btn2 ghost" onclick="closeOv('ovReceipt')">← Kembali</button><button class="btn2 ghost" onclick="printThermal()">🖨️ Thermal (USB)</button><button class="btn2 solid" onclick="window.print()">🖨️ Cetak Struk</button></div></div></div>
 
 <div class="overlay" id="ovHistory"><div class="modal m-w-m"><div class="m-head"><h3>🧾 Riwayat Transaksi Hari Ini</h3><button class="m-close" onclick="closeOv('ovHistory')">✕</button></div>
   <div class="m-body"><div id="txList"></div></div></div></div>
@@ -330,7 +330,7 @@ const PBADGE = {cash:'b-cash',qris:'b-qris',card:'b-card',ewallet:'b-ewallet'};
 const TINT = {kopi:['#f3e2c8'],minuman:['#ddefe6'],makanan:['#fbe3d2'],camilan:['#f6ead2'],dessert:['#f9e0e3'],
   roomservice:['#e8e6f4'],minibar:['#e0ecf3'],laundry:['#e2eff4'],layanan:['#efe9db'],spa:['#ece2f2']};
 
-let CATS = [], PRODS = [], ING = [], TX = [], SHIFT = null;
+let CATS = [], PRODS = [], ING = [], TX = [], SHIFT = null, LAST_RECEIPT = null;
 const S = {mode:'cafe',cat:'all',q:'',cart:[],orderType:'dinein',discMode:'percent',method:'cash',paid:0};
 
 function toast(msg,icon='✅'){
@@ -697,6 +697,7 @@ async function confirmPay(){
 
 /* ===== Struk ===== */
 function showReceipt(t){
+  LAST_RECEIPT = t;
   const d = t.time ? new Date(t.time) : (t.created_at.toDate ? t.created_at.toDate() : new Date());
   const ctx = t.type==='dinein' ? 'Meja '+(t.meta.meja||'-')
     : t.type==='takeaway' ? 'Take Away · '+(t.meta.tamu||'-')
@@ -721,6 +722,74 @@ function showReceipt(t){
     <div class="dash"></div>
     <div class="c">✦ Terima kasih <br>Sampai jumpa lagi!</div>`;
   showOv('ovReceipt');
+}
+
+/* ===== Cetak Thermal via WebUSB (Chrome/Edge saja, perlu printer USB) ===== */
+async function printThermal(){
+  if(!LAST_RECEIPT){ toast('Belum ada struk untuk dicetak','⚠️'); return; }
+  if(!navigator.usb){ toast('Browser ini tidak mendukung WebUSB. Pakai Chrome atau Edge.','⚠️'); return; }
+  const t = LAST_RECEIPT;
+  try{
+    const device = await navigator.usb.requestDevice({ filters: [
+      { vendorId: 0x04b8 }, // Epson
+      { vendorId: 0x0483 }, // STMicro (dipakai banyak printer generik/Xprinter)
+      { vendorId: 0x0416 }, // Winbond (Zjiang, dll)
+      { vendorId: 0x0d3a }, // Zjiang
+      { vendorId: 0x1c8a }, // Global Unichip
+      { vendorId: 0x28e9 }  // GD32-based (banyak printer thermal Cina generik)
+    ] });
+    await device.open();
+    if(device.configuration === null) await device.selectConfiguration(1);
+    const iface = device.configuration.interfaces.find(i =>
+      i.alternates.some(a => a.endpoints.some(e => e.direction === 'out'))
+    );
+    if(!iface) throw new Error('Endpoint OUT tidak ditemukan pada printer ini.');
+    await device.claimInterface(iface.interfaceNumber);
+    const alt = iface.alternates.find(a => a.endpoints.some(e => e.direction === 'out'));
+    const ep = alt.endpoints.find(e => e.direction === 'out');
+
+    const enc = new TextEncoder();
+    const bytes = [];
+    const push = arr => bytes.push(...arr);
+    const line = (str='') => push(Array.from(enc.encode(str + '\n')));
+    const pad2 = (a,b,w=32) => {
+      const gap = Math.max(1, w - a.length - b.length);
+      return a + ' '.repeat(gap) + b;
+    };
+
+    push([0x1B,0x40]);            // Initialize printer
+    push([0x1B,0x61,0x01]);       // Center align
+    line('SENJA GROUP');
+    line('Jl. Kenanga No. 21, Yogyakarta');
+    line('Telp 0274-555-123');
+    line('--------------------------------');
+    push([0x1B,0x61,0x00]);       // Left align
+    const d = t.time ? new Date(t.time) : (t.created_at.toDate ? t.created_at.toDate() : new Date());
+    line('No.Ref: ' + t.no);
+    line(d.toLocaleDateString('id-ID') + ' ' + d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) + '  Kasir: ' + (t.user_name||'').split(' ')[0]);
+    line('--------------------------------');
+    t.items.forEach(i => line(pad2(i.q + 'x ' + i.n, rp(i.p*i.q))));
+    line('--------------------------------');
+    line(pad2('Subtotal', rp(t.sub)));
+    if(t.disc) line(pad2('Diskon', '-' + rp(t.disc)));
+    line(pad2('PB1 10%', rp(t.tax)));
+    push([0x1B,0x45,0x01]);       // Bold on
+    line(pad2('TOTAL', rp(t.total)));
+    push([0x1B,0x45,0x00]);       // Bold off
+    line(pad2(PM[t.method], rp(t.paid)));
+    line(pad2('Kembalian', rp(t.change)));
+    line('--------------------------------');
+    push([0x1B,0x61,0x01]);
+    line('Terima kasih');
+    line('Sampai jumpa lagi!');
+    line(''); line('');
+    push([0x1D,0x56,0x42,0x00]);  // Feed + partial cut
+
+    await device.transferOut(ep.endpointNumber, new Uint8Array(bytes));
+    toast('Struk terkirim ke printer thermal!','🖨️');
+  }catch(err){
+    if(err.name !== 'NotFoundError') toast('Gagal cetak thermal: ' + err.message, '❌');
+  }
 }
 
 /* ===== Riwayat & Laporan ===== */
