@@ -222,6 +222,7 @@ header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;ba
       <a class="head-btn" href="stok.html">📦 Stok <b id="lowBadge" style="color:#f2a595;display:none"></b></a>
       <button class="head-btn" onclick="openHistory()">🧾 Riwayat</button>
       <button class="head-btn" onclick="openReport()">📊 Laporan</button>
+      <a class="head-btn" href="finance.html" id="financeBtn" style="display:none">💰 Keuangan</a>
       <button class="head-btn danger" onclick="closeShift()">⏻ Tutup Shift</button>
     </div>
   </header>
@@ -352,6 +353,7 @@ $('dateLabel').textContent = new Date().toLocaleDateString('id-ID',{weekday:'sho
   $('userName').textContent = u.nama.split(' ')[0];
   $('userRole').textContent = u.role;
   $('shiftName').textContent = u.nama.split(' ')[0];
+  if (isAdmin()) $('financeBtn').style.display = 'flex';
   try{
     const [catSnap, prodSnap] = await Promise.all([
       db.collection('categories').get(),
