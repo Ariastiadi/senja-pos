@@ -36,18 +36,23 @@ function isAdmin() {
 function rp(n){ return 'Rp ' + Math.round(n).toLocaleString('id-ID'); }
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-/* Cari shift aktif milik user saat ini (selesai == null) */
+/* Cari shift aktif (selesai == null) — TANPA orderBy, jadi tidak butuh index komposit */
 async function activeShift() {
   const u = currentUser();
   if (!u) return null;
   const snap = await db.collection('shifts')
     .where('user_id', '==', u.id)
     .where('selesai', '==', null)
-    .orderBy('mulai', 'desc')
-    .limit(1).get();
+    .get();
   if (snap.empty) return null;
-  const d = snap.docs[0];
-  return { id: d.id, ...d.data() };
+  let best = null;
+  snap.forEach(d => {
+    const s = { id: d.id, ...d.data() };
+    const t = (s.mulai && typeof s.mulai.toMillis === 'function') ? s.mulai.toMillis()
+            : (typeof s.mulai === 'number' ? s.mulai : 0);
+    if (!best || t > best.t) best = { t: t, s: s };
+  });
+  return best ? best.s : null;
 }
 
 /* Rentang waktu "hari ini" (dipakai berkali-kali untuk laporan/riwayat) */
