@@ -41,7 +41,6 @@
 
 <script src="firebase-init.js"></script>
 <script>
-/* Hash PIN lokal — HARUS sama persis dengan yang di login.html */
 function pinHash(pin){
   var s = String(pin), h1 = 5381, h2 = 52711;
   for (var i = 0; i < s.length; i++){
@@ -167,6 +166,31 @@ const USERS = [
   ['Admin Senja','admin','9999','admin'],
 ];
 
+const COA = [
+  {id:'1101', nama:'Kas', tipe:'Aset', normal:'Debit'},
+  {id:'1102', nama:'Bank / E-Wallet', tipe:'Aset', normal:'Debit'},
+  {id:'1103', nama:'Piutang Tamu', tipe:'Aset', normal:'Debit'},
+  {id:'1110', nama:'Persediaan Bahan', tipe:'Aset', normal:'Debit'},
+  {id:'1301', nama:'Aset Tetap & Peralatan', tipe:'Aset', normal:'Debit'},
+  {id:'2101', nama:'Utang PB1 (Pajak 10%)', tipe:'Kewajiban', normal:'Kredit'},
+  {id:'2102', nama:'Utang Supplier', tipe:'Kewajiban', normal:'Kredit'},
+  {id:'3101', nama:'Modal Pemilik', tipe:'Ekuitas', normal:'Kredit'},
+  {id:'3102', nama:'Laba Ditahan', tipe:'Ekuitas', normal:'Kredit'},
+  {id:'4101', nama:'Pendapatan Kafe', tipe:'Pendapatan', normal:'Kredit'},
+  {id:'4102', nama:'Pendapatan Kamar', tipe:'Pendapatan', normal:'Kredit'},
+  {id:'4103', nama:'Pendapatan Room Service', tipe:'Pendapatan', normal:'Kredit'},
+  {id:'4104', nama:'Pendapatan Laundry', tipe:'Pendapatan', normal:'Kredit'},
+  {id:'4105', nama:'Pendapatan Spa', tipe:'Pendapatan', normal:'Kredit'},
+  {id:'4106', nama:'Pendapatan Minibar', tipe:'Pendapatan', normal:'Kredit'},
+  {id:'5101', nama:'HPP Kafe', tipe:'HPP', normal:'Debit'},
+  {id:'5102', nama:'HPP Hotel & Minibar', tipe:'HPP', normal:'Debit'},
+  {id:'6101', nama:'Beban Gaji', tipe:'Beban', normal:'Debit'},
+  {id:'6102', nama:'Beban Listrik & Air', tipe:'Beban', normal:'Debit'},
+  {id:'6103', nama:'Beban Sewa', tipe:'Beban', normal:'Debit'},
+  {id:'6104', nama:'Beban Penyusutan', tipe:'Beban', normal:'Debit'},
+  {id:'6105', nama:'Beban Operasional Lain', tipe:'Beban', normal:'Debit'}
+];
+
 async function install(){
   const btn = document.getElementById('btnStart');
   btn.disabled = true; btn.textContent = 'Menjalankan…';
@@ -213,6 +237,10 @@ async function install(){
       await db.collection('users').doc(username).set({nama,username,pinHash:hash,role});
     }
     log('✓ ' + USERS.length + ' akun dibuat');
+
+    log('Membuat Chart of Accounts (COA)...');
+    for(const c of COA) await db.collection('coa').doc(c.id).set(c);
+    log('✓ ' + COA.length + ' akun COA dibuat');
 
     log('<br><b style="color:#5fd68a">SELESAI ✅</b>');
     document.querySelector('.go').style.display = 'block';
