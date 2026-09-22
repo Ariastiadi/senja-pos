@@ -9,37 +9,40 @@
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <style>
-:root{--roast:#1a1310;--roast2:#241a14;--paper:#f4eee2;--card:#fffdf6;--line:#e6dcc6;--muted:#8a7d6a;
---amber:#e08a2e;--amber-deep:#b9641a;--green:#2f7d52;--red:#c8503e;--blue:#24618a;
+:root{--roast:#180f0a;--roast2:#241a14;--paper:#f6f1e6;--card:#ffffff;--line:#ece2ce;--muted:#8f8171;
+--amber:#e2872a;--amber-deep:#b8611a;--amber-soft:#fbeada;--green:#2f7d52;--red:#c8503e;--blue:#24618a;
+--sh-sm:0 1px 2px rgba(120,72,20,.06);--sh-md:0 10px 24px rgba(120,72,20,.09);--sh-lg:0 20px 48px rgba(24,15,10,.16);
 --disp:'Bricolage Grotesque',sans-serif;--body:'Plus Jakarta Sans',sans-serif;--mono:'Space Mono',monospace}
 *{box-sizing:border-box;margin:0}body{font-family:var(--body);background:var(--paper);color:var(--roast);min-height:100vh}
-header{background:linear-gradient(100deg,var(--roast),var(--roast2));color:#f3ead9;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;position:sticky;top:0;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+header{background:linear-gradient(165deg,var(--roast),var(--roast2));color:#f3ead9;padding:15px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;position:sticky;top:0;z-index:10;box-shadow:var(--sh-lg)}
 header h1{font-family:var(--disp);font-size:20px;display:flex;align-items:center;gap:10px}
-.btn{background:var(--amber);color:#fff;border:none;padding:9px 16px;border-radius:9px;font-weight:700;cursor:pointer;font-family:var(--body);font-size:13px;transition:.2s;display:inline-flex;align-items:center;gap:6px}
-.btn:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(224,138,46,.3)}
-.btn-outline{background:transparent;border:1.5px solid #f3ead9;color:#f3ead9}
-.btn-outline:hover{background:rgba(255,255,255,.1);box-shadow:none}
-.btn-ghost{background:var(--card);color:var(--roast);border:1.5px solid var(--line)}
+.btn{background:linear-gradient(150deg,var(--amber),var(--amber-deep));color:#fff;border:none;padding:10px 17px;border-radius:11px;font-weight:700;cursor:pointer;font-family:var(--body);font-size:13px;transition:.18s;display:inline-flex;align-items:center;gap:6px;box-shadow:0 6px 16px rgba(185,97,26,.25)}
+.btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(185,97,26,.32)}
+.btn-outline{background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.08);color:#e8d9c2;box-shadow:none}
+.btn-outline:hover{background:rgba(255,255,255,.1);box-shadow:none;transform:translateY(-1px)}
+.btn-ghost{background:var(--card);color:var(--roast);border:1.5px solid var(--line);box-shadow:var(--sh-sm)}
 .btn-ghost:hover{border-color:var(--amber);color:var(--amber-deep)}
 .container{max-width:1250px;margin:20px auto;padding:0 20px}
-.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px;background:var(--card);padding:14px;border-radius:14px;border:1px solid var(--line)}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px;background:var(--card);padding:15px;border-radius:16px;border:1px solid var(--line);box-shadow:var(--sh-sm)}
 .toolbar label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
 .toolbar select,.toolbar input[type="date"]{padding:8px 12px;border:1.5px solid var(--line);border-radius:8px;font-family:var(--body);font-size:13px;background:var(--paper);outline:none}
 .toolbar select:focus,.toolbar input:focus{border-color:var(--amber)}
 .tabs{display:flex;gap:4px;border-bottom:2px solid var(--line);margin-bottom:24px;overflow-x:auto;scrollbar-width:thin}
-.tab{padding:12px 20px;cursor:pointer;font-weight:700;font-size:14px;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap;transition:.2s}
-.tab:hover{color:var(--roast)}
+.tab{padding:12px 20px;cursor:pointer;font-weight:700;font-size:14px;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap;transition:.18s;border-radius:8px 8px 0 0}
+.tab:hover{color:var(--roast);background:rgba(224,138,46,.06)}
 .tab.active{color:var(--amber-deep);border-color:var(--amber)}
 .panel{display:none;animation:fadeIn .3s}.panel.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 4px 16px rgba(90,62,30,.04)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;margin-bottom:24px;box-shadow:var(--sh-sm)}
 .card h3{font-family:var(--disp);font-size:18px;margin-bottom:16px;color:var(--roast);display:flex;align-items:center;gap:8px}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
 th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line)}
-th{background:#fbf7ec;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:800;position:sticky;top:0}
+th{background:var(--amber-soft);font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--amber-deep);font-weight:800;position:sticky;top:0}
 .num{text-align:right;font-family:var(--mono);font-weight:600}
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px}
-.kpi{background:var(--card);padding:20px;border-radius:16px;border:1px solid var(--line);position:relative;overflow:hidden}
+.kpi{background:var(--card);padding:20px;border-radius:20px;border:1px solid rgba(255,255,255,.7);position:relative;overflow:hidden;transition:.18s;
+  box-shadow:-6px -6px 14px rgba(255,255,255,.85),8px 10px 20px rgba(120,72,20,.13)}
+.kpi:hover{transform:translateY(-2px);box-shadow:-6px -6px 14px rgba(255,255,255,.9),10px 14px 24px rgba(120,72,20,.17)}
 .kpi::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--amber)}
 .kpi.green::before{background:var(--green)}.kpi.red::before{background:var(--red)}.kpi.blue::before{background:var(--blue)}
 .kpi .label{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:800;letter-spacing:.5px}
