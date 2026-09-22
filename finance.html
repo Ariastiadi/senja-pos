@@ -210,7 +210,7 @@ function renderDashboard(bal) {
   const hpp = Object.values(bal).filter(b=>b.tipe==='HPP').reduce((s,b)=>s+b.final,0);
   const beb = Object.values(bal).filter(b=>b.tipe==='Beban').reduce((s,b)=>s+b.final,0);
   const laba = pend - hpp - beb;
-  const check = aset === (kew + ek + laba);
+  const check = Math.round(aset) === Math.round(kew + ek + laba);
 
   document.getElementById('dashboard').innerHTML = `
     <div class="kpi-grid">
