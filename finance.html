@@ -115,7 +115,7 @@ input:focus,select:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(224
 
 <script src="firebase-init.js"></script>
 <script>
-const rp = n => 'Rp ' + Math.round(n||0).toLocaleString('id-ID');
+rp = n => 'Rp ' + Math.round(n||0).toLocaleString('id-ID');
 const accRp = n => n < 0 ? `(${rp(Math.abs(n))})` : rp(n);
 let COA = [], JRN = [], filteredJRN = [];
 
