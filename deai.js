@@ -39,6 +39,8 @@
   +'<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>'
   +'<symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>'
   +'<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>'
+  +'<symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M8 21h8"/><path d="M5 7 2 13a3 3 0 0 0 6 0Z"/><path d="M19 7l-3 6a3 3 0 0 0 6 0Z"/></symbol>'
+  +'<symbol id="i-book" viewBox="0 0 24 24"><path d="M4 4h7a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4Z"/><path d="M20 4h-7a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h7Z"/></symbol>'
   +'<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></symbol>'
   +'<symbol id="i-flask" viewBox="0 0 24 24"><path d="M10 2v6L4.7 18a2 2 0 0 0 1.8 3h11a2 2 0 0 0 1.8-3L14 8V2"/><path d="M8.5 2h7"/><path d="M7 15h10"/></symbol>'
   +'</svg>';
@@ -61,7 +63,8 @@
     '🏨':'i-hotel','📦':'i-box','📊':'i-chart','⏻':'i-power','🔍':'i-search','🥡':'i-bag',
     '💵':'i-cash','💰':'i-cash','📱':'i-qr','💳':'i-card','👛':'i-wallet','📅':'i-cal',
     '🧾':'i-receipt','⭐':'i-star','✨':'i-grid','✅':'i-check','🎉':'i-star',
-    '🧪':'i-flask','➕':'i-plus','🕘':'i-clock','🔓':'i-lock'
+    '🧪':'i-flask','➕':'i-plus','🕘':'i-clock','🔓':'i-lock',
+    '⚖️':'i-scale','📈':'i-chart','📘':'i-book','📖':'i-book','✍️':'i-plus','💾':'i-check','❌':'i-x'
   };
   const keys = Object.keys(MAP).sort((a,b)=>b.length-a.length);
   const rx = new RegExp(keys.map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'),'g');
