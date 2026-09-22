@@ -1,0 +1,11 @@
+{
+  "name": "SENJA POS",
+  "short_name": "SENJA POS",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f6f1e6",
+  "theme_color": "#180f0a",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }
+  ]
+}
