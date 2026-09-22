@@ -1,13 +1,13 @@
 /* =========================================================================
-   SENJA POS — Konfigurasi Firebase
+   SENJA POS — Konfigurasi Firebase (SANDBOX)
    ========================================================================= */
 const firebaseConfig = {
-  apiKey: "AIzaSyBqh3U2NafYRy-2gcPVzU6xMKRbmOV9Wug",
-  authDomain: "senja-pos.firebaseapp.com",
-  projectId: "senja-pos",
-  storageBucket: "senja-pos.firebasestorage.app",
-  messagingSenderId: "200213038165",
-  appId: "1:200213038165:web:79e74a742244073bf0c0dc"
+  apiKey: "AIzaSyAwIPMNpU5tFcx97AEFHaicEodTeltdoLw",
+  authDomain: "senja-pos-sandbox.firebaseapp.com",
+  projectId: "senja-pos-sandbox",
+  storageBucket: "senja-pos-sandbox.firebasestorage.app",
+  messagingSenderId: "818178856375",
+  appId: "1:818178856375:web:4a9bb982724fbdd8178432"
 };
 
 firebase.initializeApp(firebaseConfig);
