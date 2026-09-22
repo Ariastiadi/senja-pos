@@ -561,8 +561,8 @@ function openPay(){
   buildQuick(c.total); updatePayUI(); showOv('ovPay');
 }
 function buildQuick(total){
-  const amts = [['Uang Pas',total],[20000],[50000],[100000],[200000],[500000]];
-  $('quickRow').innerHTML = amts.map(([v])=>{
+  const amts = [total, 20000, 50000, 100000, 200000, 500000];
+  $('quickRow').innerHTML = amts.map(v=>{
     const label = v===total?'Uang Pas': v>=1000000?(v/1000000)+' jt':(v/1000)+' rb';
     return `<button class="qbtn" onclick="setPaid(${v})">${label}</button>`;
   }).join('');
