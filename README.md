@@ -1,52 +1,86 @@
-# SENJA POS — Versi Web (GitHub Pages + Firebase)
+# ☕ SENJA POS
 
-Ini hasil convert dari versi PHP+MySQL kamu. Sekarang murni **HTML + JavaScript**
-(tidak ada server PHP sama sekali), dengan **Firebase Firestore** sebagai pengganti MySQL.
-Tampilan, warna, dan alur kerja **sengaja dibuat identik** dengan versi lama.
+Aplikasi kasir (Point of Sale) untuk **kafe, restoran, dan hotel** — berjalan langsung di browser, tanpa server sendiri. Dibangun dengan HTML + JavaScript, di-hosting gratis di **GitHub Pages**, dengan **Firebase** (Firestore + Authentication) sebagai database dan sistem login.
 
-## File yang ada
-- `firebase-init.js` — konfigurasi Firebase (WAJIB diisi dulu, lihat langkah 1)
-- `seed.html` — pengganti `install.php`, isi database awal (jalankan 1x saja)
-- `login.html` — pengganti `login.php`
-- `index.html` — pengganti `index.php` (halaman kasir utama)
-- `stok.html` — pengganti `stok.php`
+🔗 **Aplikasi web:** https://ariastiadi.github.io/senja-pos/
+📱 **APK Android:** unduh di halaman [Releases](https://github.com/Ariastiadi/senja-pos/releases/latest)
 
-## Langkah 1 — Bikin project Firebase (gratis)
-1. Buka https://console.firebase.google.com, klik **Add project**
-2. Kasih nama (misal `senja-pos`), lanjutkan sampai selesai (boleh matikan Google Analytics)
-3. Di dashboard project, klik ikon **`</>`** (Web) untuk daftarkan web app
-   - Nickname bebas, **jangan** centang Firebase Hosting
-4. Copy object `firebaseConfig` yang muncul, **tempel ke `firebase-init.js`** (gantikan bagian yang bertuliskan "GANTI...")
-5. Di sidebar kiri: **Build → Firestore Database → Create database**
-   - Pilih **Start in test mode** dulu (mode ini terbuka untuk siapa saja — lihat catatan keamanan di bawah)
-   - Pilih lokasi server: `asia-southeast2 (Jakarta)` atau `asia-southeast1 (Singapore)`
+---
 
-## Langkah 2 — Isi data awal
-Buka `seed.html` di browser (bisa langsung dobel-klik filenya untuk coba lokal dulu),
-klik **"Jalankan Instalasi"**. Ini otomatis membuat semua kategori, menu, bahan baku,
-resep, dan 3 akun (rani/1234, bima/2345, admin/9999) — sama persis dengan data demo yang lama.
+## ✨ Fitur
 
-## Langkah 3 — Upload ke GitHub, aktifkan GitHub Pages
-1. Buat repository baru di GitHub (boleh private atau public)
-2. Upload ke-6 file di folder ini (jangan lupa `firebase-init.js` yang sudah diisi)
-3. Buka **Settings → Pages** di repo itu
-4. Source: pilih branch `main`, folder `/ (root)` → Save
-5. Tunggu 1-2 menit, GitHub kasih link seperti `https://namamu.github.io/nama-repo/`
+**Kasir**
+- Mode **Kafe** & **Hotel** dalam satu aplikasi (bisa dimatikan kalau tidak perlu)
+- Dine In / Take Away / Kamar Hotel, diskon (% atau Rp), pajak (PB1/PBJT) yang bisa diatur
+- Pembayaran Tunai, QRIS, Kartu, E-Wallet — hitung kembalian otomatis
+- **Kirim ke Dapur** (tiket dapur tanpa harga) & **Pesanan Terbuka** — pesan dulu, bayar belakangan
+- Struk: cetak biasa, printer thermal USB (WebUSB), atau kirim via **WhatsApp**
+- Edit harga & foto menu langsung dari layar kasir (Admin)
 
-## ⚠️ PENTING — soal keamanan
-Karena ini murni jalan di browser (tanpa server), ada 2 hal yang beda dari versi PHP lama:
+**Hotel**
+- **Papan Kamar**: check-in, status kamar, tagihan kamar (folio)
+- **Tagihkan ke Kamar** untuk room service, bayar sekaligus saat checkout
 
-1. **Firestore "test mode" bisa diakses siapa saja yang tahu project ID-nya** — bukan cuma
-   orang yang login lewat `login.html`. Untuk penggunaan internal jangka pendek ini oke,
-   tapi kalau mau lebih aman, di Firebase Console buka **Firestore → Rules** dan ganti jadi
-   aturan yang lebih ketat (saya bisa bantu susun kalau diminta).
-2. **Perhitungan total transaksi dipercaya dari browser kasir**, bukan diverifikasi ulang oleh
-   server terpisah (beda dari versi PHP yang menghitung ulang di `api.php`). Untuk pemakaian
-   internal oleh kasir yang dipercaya, ini wajar — tapi kalau sistem ini nantinya dibuka ke
-   pihak luar, ini jadi celah yang perlu ditutup dengan backend asli.
+**Operasional & Keuangan**
+- Stok bahan baku + resep → stok terpotong otomatis saat menu terjual
+- Buka/tutup shift dengan **rekonsiliasi kas** (selisih laci), catat kas masuk/keluar
+- **Void** transaksi (Admin) — stok dikembalikan & jurnal dibalik otomatis
+- Modul Keuangan: jurnal otomatis (double-entry), Laba/Rugi, Neraca, Buku Besar, export PDF/Excel/CSV
+- Sinkron real-time antar device
 
-## Yang TIDAK berubah dari versi lama
-- Semua tampilan, warna, dan animasi — sama persis
-- Alur kerja: buka shift → pilih menu → bayar → cetak struk → laporan — sama persis
-- Potong stok otomatis sesuai resep saat produk terjual — sama persis
-- Peringatan stok menipis/habis — sama persis
+**Keamanan** (sebagian terinspirasi [GrapheneOS](https://grapheneos.org))
+- Login per karyawan lewat **Firebase Authentication** (username + PIN)
+- Keypad PIN **diacak** (anti-intip), pembatasan percobaan PIN
+- **Kunci otomatis** saat tidak dipakai, konfirmasi PIN untuk aksi sensitif
+- **PIN darurat** (alarm diam ke device Admin)
+- **Log audit** aktivitas penting
+- **Firestore Security Rules** per peran (Kasir / Admin) — lihat [`firestore.rules`](firestore.rules)
+
+---
+
+## 🗂️ Struktur file
+
+| File | Fungsi |
+|---|---|
+| `index.html` | Halaman kasir utama |
+| `login.html` | Halaman login (username + PIN) |
+| `stok.html` | Stok bahan baku & resep |
+| `finance.html` | Modul keuangan & akuntansi (Admin) |
+| `firebase-init.js` | Konfigurasi Firebase |
+| `firestore.rules` | Aturan keamanan database |
+| `twa-manifest.json`, `scripts/`, `.github/workflows/` | Build APK Android otomatis |
+
+---
+
+## 🚀 Memakai untuk usaha sendiri
+
+1. **Fork** repo ini, lalu aktifkan **Settings → Pages** (branch `main`, folder `/ (root)`).
+2. Buat project di [Firebase Console](https://console.firebase.google.com):
+   - Daftarkan **Web app**, salin `firebaseConfig` ke `firebase-init.js`
+   - Aktifkan **Firestore Database**
+   - Aktifkan **Authentication → Sign-in method → Email/Password**
+3. Buat akun Admin pertama dan isi data awal (menu, kategori, bahan, COA) di Firestore.
+4. Pasang isi [`firestore.rules`](firestore.rules) di **Firestore → Rules → Publish**.
+5. Login sebagai Admin → **⚙️ Pengaturan** untuk mengatur nama toko, pajak, karyawan, dan keamanan.
+
+> ⚠️ Jangan biarkan Firestore dalam "test mode" (terbuka untuk umum) saat dipakai sungguhan.
+
+---
+
+## 📱 Build APK
+
+APK dibuat otomatis oleh **GitHub Actions** (tab *Actions* → **Build APK** → *Run workflow*) dan terbit di halaman **Releases**. APK ini adalah *Trusted Web Activity*: isinya selalu mengikuti versi web terbaru, jadi perbaikan di web langsung dirasakan pengguna APK tanpa perlu update.
+
+Kunci penandatangan APK disimpan sebagai **GitHub Secrets** (`SENJAPOS_KEYSTORE_B64`, `SENJAPOS_KEYSTORE_PASSWORD`) dan tidak pernah disimpan di repo.
+
+---
+
+## 🙏 Kredit
+
+Proyek ini awalnya di-fork dari **[andrasulthan-alt/senja-pos](https://github.com/andrasulthan-alt/senja-pos)**, lalu dikembangkan lebih lanjut secara mandiri (fitur hotel & folio, pesanan terbuka / KOT, rekonsiliasi kas, void, modul keuangan, Firebase Authentication, dan penguatan keamanan).
+
+Terima kasih kepada **andrasulthan-alt** atas fondasi awalnya. 🙌
+
+## 📄 Lisensi
+
+[MIT](LICENSE) — hak cipta asli tetap milik andrasulthan-alt, dengan pengembangan lanjutan oleh Ariastiadi.
