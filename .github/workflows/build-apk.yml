@@ -23,8 +23,12 @@ jobs:
         with:
           node-version: 20
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Pakai Android SDK bawaan mesin GitHub
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          if [ -x "$SDKM" ]; then yes | "$SDKM" --licenses > /dev/null || true; fi
+          ls "$ANDROID_HOME/build-tools"
 
       - name: Nomor versi otomatis (1.0.<nomor build>)
         run: |
