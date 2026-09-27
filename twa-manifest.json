@@ -1,0 +1,41 @@
+{
+  "packageId": "com.ariastiadi.senjapos",
+  "host": "ariastiadi.github.io",
+  "name": "SENJA POS",
+  "launcherName": "SENJA POS",
+  "display": "standalone",
+  "orientation": "default",
+  "themeColor": "#180f0a",
+  "navigationColor": "#180f0a",
+  "navigationColorDark": "#180f0a",
+  "backgroundColor": "#f6f1e6",
+  "enableNotifications": false,
+  "startUrl": "/senja-pos/",
+  "iconUrl": "https://ariastiadi.github.io/senja-pos/icon-192.png",
+  "maskableIconUrl": "https://ariastiadi.github.io/senja-pos/icon-192.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./release.keystore",
+    "alias": "senjapos"
+  },
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://ariastiadi.github.io/senja-pos/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://ariastiadi.github.io/senja-pos/",
+  "minSdkVersion": 21,
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "shareTarget": null,
+  "protocolHandlers": [],
+  "appVersion": "1.0.0"
+}
