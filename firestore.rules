@@ -1,0 +1,97 @@
+rules_version = '2';
+// =====================================================================
+// SENJA POS — Firestore Security Rules
+// Tempel di: Firebase Console → Firestore Database → Rules → Publish
+// PASANG HANYA SETELAH semua karyawan pindah ke sistem login baru
+// (di Pengaturan → Karyawan tidak ada lagi label "LAMA").
+// =====================================================================
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function userDoc()  { return /databases/$(database)/documents/users/$(request.auth.uid); }
+    // Karyawan aktif = sudah login Firebase Auth DAN punya dokumen users/{uid}.
+    // Akun yang dihapus / PIN-nya direset admin otomatis kehilangan semua akses.
+    function staff()    { return signedIn() && exists(userDoc()); }
+    function admin()    { return staff() && get(userDoc()).data.role == 'admin'; }
+    function isSelf(field) { return request.resource.data[field] == request.auth.uid; }
+
+    // Admin boleh segalanya (termasuk koleksi lain yang dipakai finance.html / stok.html)
+    match /{path=**} {
+      allow read, write: if admin();
+    }
+
+    // ---- Login: hanya pemetaan username → email akun (tanpa PIN / data sensitif) ----
+    match /logins/{username} {
+      allow read: if true;
+    }
+
+    // ---- Pengaturan ----
+    match /settings/public {          // nama & alamat toko untuk halaman login
+      allow read: if true;
+    }
+    match /settings/{doc} {           // termasuk PIN darurat (hash) → hanya karyawan
+      allow read: if staff();
+    }
+
+    // ---- Karyawan ----
+    match /users/{uid} {
+      allow read: if staff();
+    }
+    match /pins/{uid} {               // hash PIN cadangan offline: hanya pemiliknya
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
+    // ---- Menu ----
+    match /categories/{id} { allow read: if staff(); }
+    match /products/{id} {
+      allow read: if staff();
+      match /recipes/{r} { allow read: if staff(); }
+    }
+
+    // ---- Stok: kasir hanya boleh mengubah angka stok (potong otomatis saat jual) ----
+    match /ingredients/{id} {
+      allow read: if staff();
+      allow update: if staff() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stok']);
+    }
+    match /stockMoves/{id} {            // dipakai index.html (potong stok saat jual / void)
+      allow read, create: if staff();
+    }
+    match /stock_moves/{id} {           // dipakai stok.html (stok masuk / keluar manual)
+      allow read, create: if staff();
+    }
+
+    // ---- Penjualan ----
+    match /transactions/{id} {
+      allow read: if staff();
+      allow create: if staff() && isSelf('user_id');     // void (update) hanya admin
+    }
+    match /openOrders/{id} {
+      allow read, create, update: if staff();
+    }
+    match /journals/{id} {
+      allow create: if staff();                          // jurnal otomatis saat bayar; baca = admin
+    }
+
+    // ---- Shift & kas ----
+    match /shifts/{id} {
+      allow read: if staff();
+      allow create: if staff() && isSelf('user_id');
+      allow update: if staff() && resource.data.user_id == request.auth.uid;
+    }
+    match /cashMoves/{id} {
+      allow read: if staff();
+      allow create: if staff() && isSelf('user_id');
+    }
+
+    // ---- Hotel ----
+    match /rooms/{id} {
+      allow read, update: if staff();                    // check-in / checkout; tambah/hapus kamar = admin
+    }
+
+    // ---- Log audit: semua karyawan boleh mencatat atas nama sendiri, hanya admin yang membaca ----
+    match /auditLog/{id} {
+      allow create: if staff() && isSelf('user_id');
+    }
+  }
+}
