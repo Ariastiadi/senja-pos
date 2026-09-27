@@ -1,77 +1,64 @@
 <!DOCTYPE html>
-<html lang="id"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#1a1310">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="SENJA POS">
-<link rel="apple-touch-icon" href="icon-192.png">
-<title>Masuk — SENJA POS</title>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;800&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<html lang="id"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'self'; manifest-src 'self'">
+<title>Masuk — Kasir</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☕</text></svg>">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <style>
-  *{box-sizing:border-box;margin:0}
-  html,body{-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-  body{min-height:100vh;min-height:100dvh;display:grid;place-items:center;font-family:'Plus Jakarta Sans',sans-serif;
-    background:#1a1310;color:#f3ead9;padding:20px;
-    background-image:radial-gradient(rgba(224,138,46,.07) 1px,transparent 1px);background-size:26px 26px}
-  .wrap{width:100%;max-width:400px}
-  .brand{text-align:center;margin-bottom:24px}
-  .badge{width:66px;height:66px;margin:0 auto 14px;border-radius:19px;display:grid;place-items:center;font-size:30px;
-    background:linear-gradient(150deg,#f2a950,#b9641a);box-shadow:0 12px 32px rgba(224,138,46,.4),inset 0 1px 0 rgba(255,255,255,.3);position:relative}
-  .steam{position:absolute;top:-15px;left:50%;transform:translateX(-50%);display:flex;gap:5px}
-  .steam i{width:3px;height:12px;border-radius:3px;background:rgba(243,234,217,.5);animation:steam 2s infinite}
-  .steam i:nth-child(2){animation-delay:.4s}.steam i:nth-child(3){animation-delay:.8s}
-  @keyframes steam{0%{transform:translateY(0);opacity:0}30%{opacity:.8}100%{transform:translateY(-12px);opacity:0}}
-  h1{font-family:'Bricolage Grotesque';font-size:30px;letter-spacing:.5px}
-  .sub{color:#b8a892;font-size:13px;margin-top:5px;font-weight:600}
-  form{background:#241a14;border:1px solid #3d2d21;border-radius:22px;padding:28px;box-shadow:0 30px 70px rgba(0,0,0,.5)}
-  label{display:block;font-size:11.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#b8a892;margin:14px 0 7px}
-  input{width:100%;background:#1a1310;border:1.5px solid #3d2d21;border-radius:12px;padding:13px 15px;
-    -webkit-appearance:none;
-    color:#f3ead9;font-size:15px;font-family:inherit;outline:none;transition:.2s}
-  input:focus{border-color:#e08a2e;box-shadow:0 0 0 3px rgba(224,138,46,.18)}
-  input[name="pin"]{letter-spacing:8px;font-size:18px}
-  button{width:100%;margin-top:20px;padding:15px;border:none;border-radius:14px;font-family:'Bricolage Grotesque';touch-action:manipulation;-webkit-appearance:none;
-    font-weight:800;font-size:16px;letter-spacing:.5px;color:#2a1708;cursor:pointer;
-    background:linear-gradient(150deg,#e08a2e,#b9641a);box-shadow:0 8px 20px rgba(224,138,46,.25),inset 0 1px 0 rgba(255,255,255,.2);transition:.18s}
-  button:hover{transform:translateY(-2px);box-shadow:0 14px 28px rgba(224,138,46,.4)}
-  button:disabled{opacity:.6;cursor:not-allowed}
-  .err{background:rgba(200,80,62,.15);border:1px solid rgba(200,80,62,.5);color:#f2a595;
-    border-radius:10px;padding:11px 13px;font-size:13px;font-weight:700;margin-top:14px}
-  .hint{margin-top:18px;background:rgba(255,255,255,.04);border:1px dashed #3d2d21;border-radius:12px;
-    padding:13px 15px;font-size:12.5px;color:#b8a892;line-height:1.9}
-  .hint b{color:#f2d9ae}
-  .seed{margin-top:12px;text-align:center;font-size:12px;color:#8a7d6a}
-  .seed a{color:#f2a950}
+:root{--roast:#180f0a;--roast2:#241a14;--amber:#e2872a;--amber-deep:#b8611a;--muted:#b8a892;
+  --disp:'Bricolage Grotesque',sans-serif;--body:'Plus Jakarta Sans',sans-serif;--mono:'Space Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%}
+body{font-family:var(--body);background:radial-gradient(ellipse at top,#2e2018,var(--roast) 60%);color:#f3ead9;min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px 18px}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;touch-action:manipulation}
+.wrap{width:100%;max-width:360px}
+.brand{text-align:center;margin-bottom:22px}
+.badge{width:60px;height:60px;border-radius:18px;margin:0 auto 12px;display:grid;place-items:center;font-size:28px;background:linear-gradient(150deg,#f2a950,var(--amber-deep));box-shadow:0 8px 24px rgba(224,138,46,.35),inset 0 1px 0 rgba(255,255,255,.3)}
+h1{font-family:var(--disp);font-weight:800;font-size:24px;line-height:1.15}
+.sub{font-size:12.5px;color:var(--muted);margin-top:5px}
+label{display:block;font-size:11.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:0 0 7px}
+.user{width:100%;padding:14px 15px;border-radius:14px;border:1.5px solid rgba(255,255,255,.1);background:rgba(0,0,0,.3);color:#f3ead9;font-size:16px;font-weight:700;outline:none}
+.user:focus{border-color:var(--amber)}
+.dots{display:flex;justify-content:center;gap:10px;margin:20px 0 16px;min-height:14px}
+.dots i{width:13px;height:13px;border-radius:50%;border:2px solid var(--muted)}
+.dots i.f{background:#f2a950;border-color:#f2a950}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pad button{height:58px;border-radius:16px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);font-family:var(--mono);font-size:22px;font-weight:700}
+.pad button:active{background:rgba(255,255,255,.2)}
+.pad button.fn{font-family:var(--body);font-size:17px}
+.pad button.go{background:linear-gradient(150deg,#f2a950,var(--amber-deep));color:#2a1708;border:none}
+.pad button:disabled{opacity:.3}
+.msg{min-height:20px;margin-top:14px;text-align:center;font-size:13px;font-weight:700;color:var(--muted)}
+.msg.err{color:#f2a595}
+.msg.ok{color:#8fe0b0}
+.foot{margin-top:18px;text-align:center;font-size:11.5px;color:#8a7d6a;line-height:1.6}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.shake{animation:shake .35s}
 </style></head><body>
-<div class="wrap">
+<div class="wrap" id="wrap">
   <div class="brand">
-    <div class="badge"><div class="steam"><i></i><i></i><i></i></div>☕</div>
-    <h1>SENJA POS</h1>
-    <div class="sub">Kasir Kafe &amp; Hotel — Masuk untuk membuka shift</div>
+    <div class="badge">☕</div>
+    <h1 id="storeName">Kasir</h1>
+    <div class="sub">Masuk untuk membuka kasir</div>
   </div>
-  <form id="form" autocomplete="off">
-    <label>Username</label>
-    <input name="username" required autofocus placeholder="cth: rani">
-    <label>PIN</label>
-    <input type="password" name="pin" required maxlength="8" inputmode="numeric" placeholder="••••">
-    <button type="submit" id="btn">Masuk &amp; Buka Kasir →</button>
-    <div id="err" class="err" style="display:none"></div>
-  </form>
-  <div class="hint">
-    <b>Akun demo (setelah dijalankan seed.html):</b><br>
-    👤 Kasir — <b>rani</b> / PIN <b>1234</b> · <b>bima</b> / PIN <b>2345</b><br>
-    🛡️ Admin — <b>admin</b> / PIN <b>9999</b> (bisa kelola stok &amp; resep)
-  </div>
-  <div class="seed">Database masih kosong? Jalankan <a href="seed.html">seed.html</a> dulu satu kali.</div>
+  <label for="username">Username</label>
+  <input id="username" class="user" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="20" placeholder="username kamu">
+  <div class="dots" id="dots"></div>
+  <div class="pad" id="pad"></div>
+  <div class="msg" id="msg">&nbsp;</div>
+  <div class="foot">Lupa PIN? Minta Admin mengatur ulang di<br>⚙️ Pengaturan → 👥 Karyawan.</div>
 </div>
 
 <script src="firebase-init.js"></script>
 <script>
-/* Hash PIN lokal — HARUS sama persis dengan yang di seed.html */
+/* ===== Harus sama persis dengan index.html ===== */
+const AUTH_DOMAIN = 'senjapos.example.com';
+function pinPw(pin){ return 'senja:'+pin; }
 function pinHash(pin){
   var s = String(pin), h1 = 5381, h2 = 52711;
   for (var i = 0; i < s.length; i++){
@@ -82,29 +69,144 @@ function pinHash(pin){
   return 'v1$' + (h1 >>> 0).toString(16) + (h2 >>> 0).toString(16);
 }
 
-document.getElementById('form').addEventListener('submit', async function(e){
-  e.preventDefault();
-  const btn = document.getElementById('btn');
-  const err = document.getElementById('err');
-  err.style.display = 'none';
-  btn.disabled = true; btn.textContent = 'Memeriksa…';
-  try {
-    const username = new FormData(this).get('username').toString().trim().toLowerCase();
-    const pin = new FormData(this).get('pin').toString();
-    const snap = await db.collection('users').where('username','==',username).limit(1).get();
-    if (snap.empty) throw new Error('Username tidak ditemukan.');
-    const doc = snap.docs[0], u = doc.data();
-    if (String(u.pinHash || '').indexOf('v1$') !== 0)
-      throw new Error('Akun masih pakai hash lama — jalankan seed.html satu kali lagi.');
-    if (pinHash(pin) !== u.pinHash) throw new Error('PIN salah.');
-    setCurrentUser({ id: doc.id, nama: u.nama, username: u.username, role: u.role });
+const $ = id => document.getElementById(id);
+const auth = firebase.auth();
+let PIN = '', BUSY = false, TIMER = null;
+const LS = {
+  get(k,d){ try{ const v = localStorage.getItem(k); return v==null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+function rndInt(n){ try{ const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; }catch(e){ return Math.floor(Math.random()*n); } }
+
+/* Keypad PIN diacak tiap kali muncul & tiap percobaan (anti-intip, ala GrapheneOS) */
+function buildPad(){
+  const d = ['1','2','3','4','5','6','7','8','9','0'];
+  for(let i=d.length-1;i>0;i--){ const j = rndInt(i+1); [d[i],d[j]] = [d[j],d[i]]; }
+  const keys = [...d.slice(0,9), '⌫', d[9], '→'];
+  $('pad').innerHTML = keys.map(k=>`<button type="button" class="${/^\d$/.test(k)?'':(k==='→'?'fn go':'fn')}" data-k="${k}">${k}</button>`).join('');
+  $('pad').querySelectorAll('button').forEach(b=>b.addEventListener('click', ()=>key(b.dataset.k)));
+  applyThrottle();
+}
+function dots(){
+  const n = Math.min(8, Math.max(4, PIN.length));
+  $('dots').innerHTML = Array.from({length:n},(_,i)=>`<i class="${i<PIN.length?'f':''}"></i>`).join('');
+}
+function say(m, cls){ const el = $('msg'); el.textContent = m || '\u00a0'; el.className = 'msg' + (cls ? ' '+cls : ''); }
+function shake(){ const w = $('wrap'); w.classList.remove('shake'); void w.offsetWidth; w.classList.add('shake'); }
+
+/* Pembatasan percobaan di device ini (server Firebase juga membatasi sendiri) */
+function thr(){ return LS.get('senja_login_thr', {n:0, until:0}); }
+function left(){ return Math.max(0, (thr().until||0) - Date.now()); }
+function applyThrottle(){
+  clearInterval(TIMER);
+  const upd = ()=>{
+    const l = left();
+    $('pad').querySelectorAll('button').forEach(b=>b.disabled = l>0 || BUSY);
+    if(l>0) say('Terlalu banyak percobaan salah. Coba lagi dalam '+Math.ceil(l/1000)+' detik.', 'err');
+    else { clearInterval(TIMER); if($('msg').textContent.indexOf('Terlalu banyak')===0) say(''); }
+  };
+  upd(); if(left()>0) TIMER = setInterval(upd, 1000);
+}
+function failed(){
+  const t = thr(); t.n = (t.n||0) + 1;
+  if(t.n>=5) t.until = Date.now() + Math.min(15*60000, 30000*Math.pow(2, t.n-5));
+  LS.set('senja_login_thr', t);
+}
+
+function key(k){
+  if(BUSY || left()>0) return;
+  if(k==='⌫') PIN = PIN.slice(0,-1);
+  else if(k==='→'){ login(); return; }
+  else if(PIN.length<8) PIN += k;
+  dots();
+}
+
+async function login(){
+  if(BUSY || left()>0) return;
+  const username = $('username').value.trim().toLowerCase();
+  const pin = PIN;
+  if(!username){ say('Isi username dulu.', 'err'); $('username').focus(); return; }
+  if(!/^\d{4,8}$/.test(pin)){ say('PIN 4–8 angka.', 'err'); return; }
+  BUSY = true; applyThrottle(); say('Memeriksa…');
+  try{
+    let uid, profile;
+    const lg = await db.collection('logins').doc(username).get();
+    if(lg.exists){
+      /* Sistem baru: diverifikasi server Firebase Authentication */
+      const cred = await auth.signInWithEmailAndPassword(lg.data().email, pinPw(pin));
+      uid = cred.user.uid;
+      const ud = await db.collection('users').doc(uid).get();
+      if(!ud.exists){ await auth.signOut(); throw {code:'app/inactive'}; }
+      profile = ud.data();
+    } else {
+      /* Akun lama → pindah otomatis ke sistem baru saat login pertama.
+         Hanya bisa selama aturan Firestore belum dikunci; setelah dikunci, bagian ini otomatis tertolak. */
+      let snap = null;
+      try{ snap = await db.collection('users').where('username','==',username).limit(1).get(); }catch(e){ snap = null; }
+      if(!snap || snap.empty) throw {code:'app/bad'};
+      const old = snap.docs[0], u = old.data();
+      if(u.auth || pinHash(pin)!==u.pinHash) throw {code:'app/bad'};
+      say('Memindahkan akun ke sistem login baru…');
+      const email = username+'.'+Date.now().toString(36)+'@'+AUTH_DOMAIN;
+      const cred = await auth.createUserWithEmailAndPassword(email, pinPw(pin));
+      uid = cred.user.uid;
+      profile = Object.assign({}, u); delete profile.pinHash;
+      Object.assign(profile, { auth:true, migrated_from:old.id, migrated_at: firebase.firestore.Timestamp.now() });
+      await db.collection('users').doc(uid).set(profile);
+      await db.collection('logins').doc(username).set({ email, uid });
+      await db.collection('pins').doc(uid).set({ pinHash:pinHash(pin) });
+      await db.collection('users').doc(old.id).delete();
+    }
+    PIN = ''; dots();
+    LS.set('senja_login_thr', {n:0, until:0});
+    try{ localStorage.removeItem('senja_locked'); }catch(e){}
+    setCurrentUser({ id:uid, nama:profile.nama, username:profile.username||username, role:profile.role });
+    say('Berhasil, membuka kasir…', 'ok');
     location.href = 'index.html';
-  } catch (er) {
-    err.textContent = '⚠️ ' + er.message;
-    err.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Masuk & Buka Kasir →';
+  }catch(e){
+    const c = (e && e.code) || '';
+    PIN = ''; dots(); buildPad();
+    if(/app\/bad|wrong-password|invalid-credential|invalid-login-credentials|user-not-found|invalid-email/.test(c)){
+      failed(); say('Username atau PIN salah.', 'err'); shake();
+    } else if(/app\/inactive|user-disabled/.test(c)){
+      say('Akun ini sudah tidak aktif. Hubungi Admin.', 'err');
+    } else if(/too-many-requests/.test(c)){
+      say('Server mengunci sementara karena terlalu banyak percobaan. Coba lagi nanti.', 'err');
+    } else if(/operation-not-allowed/.test(c)){
+      say('Admin: aktifkan Email/Password di Firebase Console → Authentication.', 'err');
+    } else if(/network|unavailable/.test(c)){
+      say('Tidak ada koneksi internet.', 'err');
+    } else if(/permission-denied/.test(c)){
+      say('Akun lama tidak bisa dipindah lagi. Minta Admin mengisi PIN baru untukmu.', 'err');
+    } else {
+      say('Gagal masuk: '+((e && e.message) || c || 'tidak diketahui'), 'err');
+    }
+  }finally{
+    BUSY = false; applyThrottle();
   }
+}
+
+document.addEventListener('keydown', e=>{
+  if(document.activeElement === $('username')){
+    if(e.key==='Enter'){ e.preventDefault(); $('username').blur(); }
+    return;
+  }
+  if(/^[0-9]$/.test(e.key)){ key(e.key); e.preventDefault(); }
+  else if(e.key==='Backspace'){ key('⌫'); e.preventDefault(); }
+  else if(e.key==='Enter'){ key('→'); e.preventDefault(); }
 });
+
+(async function init(){
+  /* Membuka halaman login = sesi sebelumnya berakhir */
+  try{ await auth.signOut(); }catch(e){}
+  try{ if(typeof logoutUser==='function') logoutUser(); }catch(e){}
+  buildPad(); dots();
+  try{
+    const pub = await db.collection('settings').doc('public').get();
+    if(pub.exists && pub.data().nama){ $('storeName').textContent = pub.data().nama; document.title = 'Masuk — '+pub.data().nama; }
+  }catch(e){}
+  if(!$('username').value) $('username').focus();
+})();
 </script>
 <link rel="stylesheet" href="deai.css">
 <script src="deai.js"></script>
