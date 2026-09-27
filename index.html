@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="id"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'self'; manifest-src 'self'">
 <title>SENJA POS — Kasir</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☕</text></svg>">
@@ -236,7 +236,8 @@ select.inp{appearance:auto}
 .receipt .rrow{display:flex;justify-content:space-between;gap:8px}
 .receipt .rrow .nm{flex:1}
 .receipt .big{font-size:14px;font-weight:700}
-.m-actions{display:flex;gap:9px;padding:14px 22px;border-top:1.5px solid var(--line)}
+.m-actions{display:flex;flex-wrap:wrap;gap:9px;padding:14px 22px;border-top:1.5px solid var(--line)}
+.m-actions .btn2{flex:1 1 40%;min-width:0;padding:12px 8px}
 .btn2{flex:1;padding:13px;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer}
 .btn2.ghost{background:var(--paper);border:1.5px solid var(--line)}
 .btn2.solid{background:var(--roast);color:#f5e8cf}
@@ -281,7 +282,43 @@ select.inp{appearance:auto}
 @keyframes tin{from{transform:translateX(-20px);opacity:0}}
 @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
 .pop{animation:pop .35s}
-@media(max-width:1080px){body{overflow-y:auto;overflow-x:hidden}.app{height:auto}.layout{grid-template-columns:1fr;height:auto}.grid{height:auto;max-height:480px}.kpis{grid-template-columns:repeat(2,1fr)}}
+.cart-bar,.sheet-bg,.sheet-handle{display:none}
+.cart-bar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:65;align-items:center;gap:10px;padding:14px 16px;border-radius:18px;
+  background:linear-gradient(150deg,var(--green),var(--green-deep));color:#fdf6e9;box-shadow:0 12px 30px rgba(31,92,59,.35);font-weight:800;font-size:14px;text-align:left;touch-action:manipulation}
+.cart-bar.empty{background:linear-gradient(165deg,var(--roast),var(--roast2));box-shadow:var(--sh-lg)}
+.cart-bar .cb-count{background:rgba(255,255,255,.18);border-radius:10px;padding:3px 9px;font-family:var(--mono);font-size:13px}
+.cart-bar .cb-total{margin-left:auto;font-family:var(--mono);font-size:15px}
+.cart-bar .cb-up{font-size:12px;opacity:.8}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.04)}100%{transform:scale(1)}}
+.bump{animation:bump .3s}
+.sheet-bg{position:fixed;inset:0;background:rgba(20,13,8,.5);z-index:68}
+.sheet-handle{justify-content:center;align-items:center;width:100%;padding:10px 0 4px;flex-shrink:0;touch-action:manipulation}
+.sheet-handle i{width:44px;height:5px;border-radius:3px;background:#d8ccb4}
+@media(max-width:1080px){
+  html,body{height:auto;min-height:100%}
+  body{display:block;overflow-y:auto;overflow-x:hidden}
+  .app{height:auto;min-height:100vh;min-height:100dvh;overflow:visible}
+  .layout{display:block;flex:none;padding:12px 12px calc(96px + env(safe-area-inset-bottom,0px))}
+  .menu-panel{min-width:0}
+  .toolbar .search{flex:1 1 100%;min-width:0}
+  .oseg{flex:1 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none}
+  .oseg::-webkit-scrollbar{display:none}
+  .grid{height:auto;max-height:none;overflow:visible;padding:4px 2px 8px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .cart-bar{display:flex}
+  .ticket-panel{position:fixed;left:0;right:0;bottom:0;z-index:70;max-height:88vh;max-height:88dvh;border-radius:22px 22px 0 0;border:none;
+    transform:translateY(105%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.8,.3,1),visibility .28s;padding-bottom:env(safe-area-inset-bottom,0px)}
+  .tk-zigzag{display:none}
+  .tk-body{min-height:90px}
+  .sheet-handle{display:flex}
+  body.cart-open{overflow:hidden}
+  body.cart-open .ticket-panel{transform:none;visibility:visible}
+  body.cart-open .sheet-bg{display:block}
+  body.cart-open .cart-bar{visibility:hidden}
+  .toasts{left:12px;right:12px;bottom:calc(86px + env(safe-area-inset-bottom,0px))}
+  .line .lx{opacity:1}
+  .plus{opacity:1}
+}
 @media(max-width:640px){
   html{overflow-x:hidden}
   header{padding:10px 14px;gap:6px 10px}
@@ -300,8 +337,21 @@ select.inp{appearance:auto}
   .nav-group .lbl,.head-btn.danger .lbl{display:none}
   .head-btn.danger{padding:8px 10px}
   .ico{margin-right:2px;font-size:15px}
-  .layout{padding:10px;gap:10px}
+  .layout{padding:10px 10px calc(92px + env(safe-area-inset-bottom,0px))}
   .grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .status-cluster{display:none}
+  .lowbar{padding:7px 12px;font-size:11.5px;flex-wrap:nowrap;gap:6px}
+  #lowText{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lowbar a{margin-left:0;font-size:11.5px}
+  .ctx input,.ctx input.wide{flex:1;min-width:0;width:auto}
+  .card{padding:10px;border-radius:18px}
+  .tile{height:70px}
+  .card h4{font-size:13px;min-height:34px}
+  .tk-head{padding:8px 16px 10px}
+  .overlay{padding:10px}
+  .modal{max-height:94vh;max-height:94dvh}
+  .mseg{grid-template-columns:repeat(2,1fr)}
+  .m-body{padding:16px}
 }
 @media print{
   body *{visibility:hidden}
@@ -343,7 +393,7 @@ select.inp{appearance:auto}
         <button class="head-btn" id="settingsBtn" onclick="openSettings()" style="display:none"><span class="ico">⚙️</span><span class="lbl"> Pengaturan</span></button>
         <button class="head-btn" onclick="lockNow()" title="Kunci layar"><span class="ico">🔒</span><span class="lbl"> Kunci</span></button>
       </div>
-      <button class="head-btn danger" onclick="closeShift()"><span class="ico">⏻</span><span class="lbl"> Tutup Shift</span></button>
+      <button class="head-btn danger" onclick="closeShift()"><span class="ico">🚪</span><span class="lbl"> Tutup Shift</span></button>
     </div>
   </header>
   <div class="lowbar" id="lowBar">⚠️ <span id="lowText"></span><a href="stok.html">Kelola stok →</a></div>
@@ -366,6 +416,7 @@ select.inp{appearance:auto}
       <div class="grid" id="productGrid"></div>
     </section>
     <aside class="ticket-panel">
+      <button class="sheet-handle" onclick="closeCart()" aria-label="Tutup pesanan"><i></i></button>
       <div class="tk-zigzag"></div>
       <div class="tk-head"><div><h3>Pesanan Aktif</h3><div class="tk-meta"><b id="orderNo">#—</b> · <span id="orderCtx">Dine In</span></div></div><button class="tk-clear" onclick="clearCart()">✕ Bersihkan</button></div>
       <div class="tk-body" id="cartList"></div>
@@ -384,6 +435,9 @@ select.inp{appearance:auto}
     </aside>
   </div>
 </div>
+
+<div class="sheet-bg" id="sheetBg" onclick="closeCart()"></div>
+<button class="cart-bar empty" id="cartBar" onclick="toggleCart()"><span>🧾</span><span id="cbLabel">Belum ada pesanan</span><span class="cb-count" id="cbCount">0</span><span class="cb-total" id="cbTotal">Rp 0</span><span class="cb-up">▲</span></button>
 
 <div class="overlay" id="ovShift"><div class="modal m-w-s"><div class="m-head"><h3>⏱️ Buka Shift Baru</h3></div>
   <div class="m-body">
@@ -455,7 +509,7 @@ select.inp{appearance:auto}
 <div class="overlay" id="ovRoomDetail"><div class="modal m-w-s"><div class="m-head"><h3 id="rdTitle">Kamar</h3><button class="m-close" onclick="closeOv('ovRoomDetail')">✕</button></div>
   <div class="m-body" id="rdBody"></div></div></div>
 
-<div class="overlay" id="ovClose"><div class="modal m-w-s"><div class="m-head"><h3>⏻ Tutup Shift</h3><button class="m-close" onclick="closeOv('ovClose')">✕</button></div>
+<div class="overlay" id="ovClose"><div class="modal m-w-s"><div class="m-head"><h3>🚪 Tutup Shift</h3><button class="m-close" onclick="closeOv('ovClose')">✕</button></div>
   <div class="m-body">
     <div class="row"><span>Modal awal</span><span class="v" id="rcModal">Rp 0</span></div>
     <div class="row"><span>Penjualan tunai (shift ini)</span><span class="v" id="rcTunai">Rp 0</span></div>
@@ -757,6 +811,7 @@ function addToCart(id){
   line ? line.q++ : S.cart.push({id,q:1,sent:0});
   renderCart(); renderProducts();
   const b=$('orderNo'); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+  const cb=$('cartBar'); cb.classList.remove('bump'); void cb.offsetWidth; cb.classList.add('bump');
   tone(720,.06);
 }
 function changeQty(id,d){
@@ -804,8 +859,17 @@ function renderCart(){
   $('btnPay').disabled = !S.cart.length;
   $('btnKot').disabled = !S.cart.some(l=>l.q>(l.sent||0));
   $('btnFolio').disabled = !S.cart.length;
+  const nItem = S.cart.reduce((s,l)=>s+l.q,0);
+  $('cbCount').textContent = nItem;
+  $('cbTotal').textContent = rp(c.total);
+  $('cbLabel').textContent = nItem ? 'Lihat pesanan' : 'Belum ada pesanan';
+  $('cartBar').classList.toggle('empty', !nItem);
   updateTicketHead();
 }
+function isMobileLayout(){ return window.matchMedia && window.matchMedia('(max-width:1080px)').matches; }
+function toggleCart(){ document.body.classList.toggle('cart-open'); }
+function openCart(){ if(isMobileLayout()) document.body.classList.add('cart-open'); }
+function closeCart(){ document.body.classList.remove('cart-open'); }
 function setDiscMode(m){
   S.discMode=m;
   $('dmP').classList.toggle('on',m==='percent');
@@ -1016,7 +1080,7 @@ async function confirmPay(){
     }
     S.activeOrderId=null; S.activeOrderNo=null; S.folioIds=null; S.folioRoomId=null;
 
-    closeOv('ovPay');
+    closeOv('ovPay'); closeCart();
     S.cart=[]; $('discVal').value='';
     ['tableNo','guestTA','roomNo','guestName'].forEach(id=>$(id).value='');
     renderCart(); renderProducts();
@@ -1336,7 +1400,7 @@ function loadOrder(id){
   setOrderType(o.type||'dinein');
   $('tableNo').value = m.meja||''; $('roomNo').value = m.kamar||'';
   $('guestName').value = o.type==='room' ? (m.tamu||'') : ''; $('guestTA').value = o.type==='takeaway' ? (m.tamu||'') : '';
-  closeOv('ovOrders'); renderCart(); renderProducts();
+  closeOv('ovOrders'); renderCart(); renderProducts(); openCart();
   toast('Pesanan '+o.no+' dibuka di keranjang','📋');
 }
 async function deleteOpenOrder(id){
@@ -1365,7 +1429,7 @@ async function chargeToRoom(){
     await saveOpenOrder({chargeToRoom:true});
     const no = S.activeOrderNo, ctx = stripTags(ctxText());
     S.cart=[]; S.activeOrderId=null; S.activeOrderNo=null; $('discVal').value='';
-    renderCart(); renderProducts();
+    renderCart(); renderProducts(); closeCart();
     toast('Pesanan '+no+' ditagihkan ke kamar '+kamar,'🛏️');
     if(unsent.length) showKOT(unsent, no, ctx);
   }catch(err){ toast('Gagal: '+err.message,'❌'); btn.disabled=false; }
@@ -1928,6 +1992,7 @@ document.addEventListener('keydown',e=>{
     else if(e.key==='Escape') cancelPin();
     return;
   }
+  if(e.key==='Escape') closeCart();
   if(e.key==='Escape') document.querySelectorAll('.overlay.show').forEach(o=>{ if(o.id!=='ovShift') o.classList.remove('show'); });
   if(e.key==='/' && document.activeElement.tagName!=='INPUT'){ e.preventDefault(); $('searchInput').focus(); }
 });
