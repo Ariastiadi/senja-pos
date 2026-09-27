@@ -1,0 +1,83 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Nomor versi otomatis (1.0.<nomor build>)
+        run: |
+          node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync('twa-manifest.json'));m.appVersionCode=${{ github.run_number }};m.appVersion='1.0.${{ github.run_number }}';fs.writeFileSync('twa-manifest.json',JSON.stringify(m,null,2));"
+          echo "VERSION=1.0.${{ github.run_number }}" >> "$GITHUB_ENV"
+
+      - name: Buat proyek Android dari twa-manifest.json
+        run: |
+          npm install --no-save @bubblewrap/core@1.25.0
+          node scripts/generate-twa.js
+
+      - name: Build APK (belum ditandatangani)
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Tandatangani APK dengan kunci rilis
+        env:
+          KS_PASS: ${{ secrets.SENJAPOS_KEYSTORE_PASSWORD }}
+        run: |
+          echo "${{ secrets.SENJAPOS_KEYSTORE_B64 }}" | base64 -d > release.keystore
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          echo "Memakai build-tools: $BT"
+          UNSIGNED=$(ls android/app/build/outputs/apk/release/*.apk | head -1)
+          "$BT/zipalign" -f -p 4 "$UNSIGNED" aligned.apk
+          "$BT/apksigner" sign --ks release.keystore --ks-type JKS --ks-key-alias senjapos \
+            --ks-pass env:KS_PASS --key-pass env:KS_PASS \
+            --out "senja-pos-v${VERSION}.apk" aligned.apk
+          "$BT/apksigner" verify --print-certs "senja-pos-v${VERSION}.apk"
+          rm -f release.keystore aligned.apk
+
+      - name: Simpan APK sebagai artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: senja-pos-apk
+          path: senja-pos-v*.apk
+          if-no-files-found: error
+
+      - name: Terbitkan GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: SENJA POS v${{ env.VERSION }}
+          files: senja-pos-v*.apk
+          make_latest: true
+          body: |
+            ## SENJA POS v${{ env.VERSION }}
+
+            Aplikasi kasir kafe & hotel SENJA POS untuk Android.
+
+            **Cara pasang:** unduh file `.apk` di bagian *Assets* di bawah → buka di HP → izinkan "Instal dari sumber ini" kalau diminta.
+
+            - Butuh Android 5.0 ke atas dan Google Chrome (atau browser berbasis Chromium) terpasang.
+            - Isi aplikasi selalu mengikuti versi web terbaru — tidak perlu update APK setiap ada perbaikan.
+            - Setiap rilis ditandatangani dengan kunci yang sama, jadi versi baru bisa langsung dipasang menimpa versi lama.
