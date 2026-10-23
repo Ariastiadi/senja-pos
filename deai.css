@@ -15,6 +15,13 @@
 .mbtn .mi .ic{width:20px;height:20px}
 .le .ic{width:20px;height:20px}
 summary .ic{width:16px;height:16px}
+.ic.dot-green{color:#3fae6a}.ic.dot-amber{color:#e2a33a}.ic.dot-red{color:#d0533f}.ic.dot-grey{color:#b8a892}
+.tk-empty .ic,.empty-rep .ic,.empty-menu .ic{width:40px;height:40px;stroke-width:1.4;color:var(--muted)}
+.m-close .ic,.lx .ic,.tk-clear .ic{width:13px;height:13px}
+.toast .ic{width:17px;height:17px;color:var(--amber)}
+.mode-btn .ic,.oo-btn .ic,.btn-kot .ic,.btn-room .ic,.rs-chip .ic,.room-tabs .ic,.tx-view .ic{width:14px;height:14px}
+.lock-box .brand-badge .ic{width:26px;height:26px}
+.edit-ico .ic{width:13px;height:13px}
 .brand-badge .ic{width:22px;height:22px;color:#2a1708}
 .btn2 .ic,.qbtn .ic{width:14px;height:14px}
 
@@ -24,7 +31,7 @@ summary .ic{width:16px;height:16px}
 
 /* --- 3. KPI & statistik: SATU kartu dominan + 3 kartu kompak
          (mematahkan pola "kartu kembar sejajar") --- */
-.kpis{grid-template-columns:1.55fr 1fr 1fr 1fr}
+@media(min-width:801px){ .kpis{grid-template-columns:1.55fr 1fr 1fr 1fr} .stats{grid-template-columns:1.5fr 1fr 1fr 1fr} }
 .kpi.k1{padding:18px}
 .kpi.k1 .vv{font-size:30px;line-height:1.05}
 .kpi.k2,.kpi.k3,.kpi.k4{background:var(--card);color:var(--ink);
@@ -34,7 +41,6 @@ summary .ic{width:16px;height:16px}
 .kpi.k2 .vv,.kpi.k3 .vv,.kpi.k4 .vv{font-size:18px;color:var(--ink)}
 .kpi.k2 .k,.kpi.k3 .k,.kpi.k4 .k{color:var(--muted);opacity:1}
 
-.stats{grid-template-columns:1.5fr 1fr 1fr 1fr}
 .stat.s-total{background:linear-gradient(135deg,#33261c,var(--roast))}
 .stat.s-aman,.stat.s-menipis,.stat.s-habis{background:var(--card);color:var(--ink);
   border:1.5px solid var(--line);border-top:5px solid var(--green)}

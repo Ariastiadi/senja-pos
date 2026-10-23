@@ -18,15 +18,17 @@ Aplikasi kasir (Point of Sale) untuk **kafe, restoran, dan hotel** — berjalan 
 - Edit harga & foto menu langsung dari layar kasir (Admin)
 
 **Hotel**
-- **Papan Kamar**: check-in, status kamar, tagihan kamar (folio)
-- **Tagihkan ke Kamar** untuk room service, bayar sekaligus saat checkout
+- **Papan Kamar**: status kamar per tanggal, kalender 14 hari, cari kamar kosong + harga, reservasi, housekeeping
+- Tarif weekend (Jumat–Sabtu), check-in walk-in atau dari reservasi
+- **Tagihkan ke Kamar** untuk room service, bayar sekaligus saat checkout (harga & diskon sesuai saat dipesan)
 
 **Operasional & Keuangan**
 - Stok bahan baku + resep → stok terpotong otomatis saat menu terjual
 - Buka/tutup shift dengan **rekonsiliasi kas** (selisih laci), catat kas masuk/keluar
 - **Void** transaksi (Admin) — stok dikembalikan & jurnal dibalik otomatis
 - Modul Keuangan: jurnal otomatis (double-entry), Laba/Rugi, Neraca, Buku Besar, export PDF/Excel/CSV
-- Sinkron real-time antar device
+- Sinkron real-time antar device, nomor pesanan berurutan per hari tanpa bentrok
+- Tampilan Bahasa Indonesia / English (tombol 🌐)
 
 **Keamanan** (sebagian terinspirasi [GrapheneOS](https://grapheneos.org))
 - Login per karyawan lewat **Firebase Authentication** (username + PIN)
@@ -42,11 +44,13 @@ Aplikasi kasir (Point of Sale) untuk **kafe, restoran, dan hotel** — berjalan 
 
 | File | Fungsi |
 |---|---|
-| `index.html` | Halaman kasir utama |
+| `index.html`, `app.js` | Halaman kasir utama |
 | `login.html` | Halaman login (username + PIN) |
 | `stok.html` | Stok bahan baku & resep |
 | `finance.html` | Modul keuangan & akuntansi (Admin) |
-| `firebase-init.js` | Konfigurasi Firebase |
+| `firebase-init.js` | Konfigurasi Firebase + penjaga sesi halaman |
+| `i18n.js` | Terjemahan Indonesia ⇄ English |
+| `deai.js`, `deai.css` | Set ikon garis (SVG) pengganti emoji antarmuka |
 | `firestore.rules` | Aturan keamanan database |
 | `twa-manifest.json`, `scripts/`, `.github/workflows/` | Build APK Android otomatis |
 

@@ -39,11 +39,15 @@ label{display:block;font-size:11.5px;font-weight:800;letter-spacing:.8px;text-tr
 .foot{margin-top:18px;text-align:center;font-size:11.5px;color:#8a7d6a;line-height:1.6}
 @keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
 .shake{animation:shake .35s}
-</style></head><body>
+.lang-btn{position:fixed;top:calc(14px + env(safe-area-inset-top,0px));right:14px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);color:#e8d9c2;border-radius:10px;padding:7px 12px;font-weight:800;font-size:12.5px}
+</style>
+<link rel="stylesheet" href="deai.css">
+</head><body>
+<button class="lang-btn no-i18n" data-lang-btn onclick="window.SENJA_LANG && SENJA_LANG.toggle()">🌐 ID</button>
 <div class="wrap" id="wrap">
   <div class="brand">
     <div class="badge">☕</div>
-    <h1 id="storeName">Kasir</h1>
+    <h1 id="storeName" class="no-i18n">SENJA POS</h1>
     <div class="sub">Masuk untuk membuka kasir</div>
   </div>
   <label for="username">Username</label>
@@ -54,6 +58,7 @@ label{display:block;font-size:11.5px;font-weight:800;letter-spacing:.8px;text-tr
   <div class="foot">Lupa PIN? Minta Admin mengatur ulang di<br>⚙️ Pengaturan → 👥 Karyawan.</div>
 </div>
 
+<script src="i18n.js"></script>
 <script src="firebase-init.js"></script>
 <script>
 /* ===== Harus sama persis dengan index.html ===== */
@@ -71,7 +76,7 @@ function pinHash(pin){
 
 const $ = id => document.getElementById(id);
 const auth = firebase.auth();
-let PIN = '', BUSY = false, TIMER = null;
+let PIN = '', BUSY = false, TIMER = null, THR_SHOWN = false;
 const LS = {
   get(k,d){ try{ const v = localStorage.getItem(k); return v==null ? d : JSON.parse(v); }catch(e){ return d; } },
   set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
@@ -102,8 +107,8 @@ function applyThrottle(){
   const upd = ()=>{
     const l = left();
     $('pad').querySelectorAll('button').forEach(b=>b.disabled = l>0 || BUSY);
-    if(l>0) say('Terlalu banyak percobaan salah. Coba lagi dalam '+Math.ceil(l/1000)+' detik.', 'err');
-    else { clearInterval(TIMER); if($('msg').textContent.indexOf('Terlalu banyak')===0) say(''); }
+    if(l>0){ THR_SHOWN = true; say('Terlalu banyak percobaan salah. Coba lagi dalam '+Math.ceil(l/1000)+' detik.', 'err'); }
+    else { clearInterval(TIMER); if(THR_SHOWN){ THR_SHOWN = false; say(''); } }
   };
   upd(); if(left()>0) TIMER = setInterval(upd, 1000);
 }
@@ -208,6 +213,5 @@ document.addEventListener('keydown', e=>{
   if(!$('username').value) $('username').focus();
 })();
 </script>
-<link rel="stylesheet" href="deai.css">
 <script src="deai.js"></script>
 </body></html>

@@ -67,7 +67,8 @@ service cloud.firestore {
       allow create: if staff() && isSelf('user_id');     // void (update) hanya admin
     }
     match /openOrders/{id} {
-      allow read, create, update: if staff();
+      allow read, create: if staff();
+      allow update: if staff() && resource.data.status == 'open';   // pesanan yang sudah dibayar/dibatalkan terkunci
     }
     match /journals/{id} {
       allow create: if staff();                          // jurnal otomatis saat bayar; baca = admin
@@ -86,7 +87,15 @@ service cloud.firestore {
 
     // ---- Hotel ----
     match /rooms/{id} {
-      allow read, update: if staff();                    // check-in / checkout; tambah/hapus kamar = admin
+      allow read, update: if staff();                    // check-in / checkout / housekeeping; tambah/hapus kamar = admin
+    }
+    match /bookings/{id} {
+      allow read, create, update: if staff();            // reservasi kamar; hapus = admin
+    }
+
+    // ---- Nomor pesanan berurutan per hari (SNJ-YYMMDD-0001), dipakai semua device ----
+    match /counters/{id} {
+      allow read, create, update: if staff();
     }
 
     // ---- Log audit: semua karyawan boleh mencatat atas nama sendiri, hanya admin yang membaca ----

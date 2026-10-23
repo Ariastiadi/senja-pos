@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Keuangan">
 <link rel="apple-touch-icon" href="icon-192.png">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
 <title>Modul Keuangan — SENJA POS</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -14,7 +15,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
 :root{--roast:#180f0a;--roast2:#241a14;--paper:#f6f1e6;--card:#ffffff;--line:#ece2ce;--muted:#8f8171;
 --amber:#e2872a;--amber-deep:#b8611a;--amber-soft:#fbeada;--green:#2f7d52;--red:#c8503e;--blue:#24618a;
@@ -66,9 +67,13 @@ input:focus,select:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(224
 .indent{padding-left:30px!important;color:var(--muted)}
 .loader{text-align:center;padding:40px;color:var(--muted);font-weight:600}
 .empty{text-align:center;padding:40px;color:var(--muted);font-style:italic}
+.muted-sm{font-family:var(--body);font-size:12px;font-weight:600;color:var(--muted);margin-left:8px}
+button:disabled{opacity:.5;cursor:not-allowed}
 @media print{header,.tabs,.no-print,.toolbar{display:none!important}.panel{display:block!important}.card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}}
 @media(max-width:768px){.kpi-grid{grid-template-columns:1fr 1fr}.kpi .value{font-size:20px}}
-</style></head><body>
+</style>
+<link rel="stylesheet" href="deai.css">
+</head><body>
 
 <header>
   <h1>📊 Modul Keuangan & Akuntansi</h1>
@@ -77,6 +82,7 @@ input:focus,select:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(224
     <button class="btn btn-outline no-print" onclick="exportExcel()">📊 Export Excel</button>
     <button class="btn btn-outline no-print" onclick="exportCSV()">📥 Export CSV</button>
     <button class="btn btn-outline no-print" onclick="window.print()">🖨️ Cetak</button>
+    <button class="btn btn-outline no-i18n" data-lang-btn onclick="window.SENJA_LANG && SENJA_LANG.toggle()">🌐 ID</button>
     <a href="index.html" class="btn btn-ghost">← Kembali ke Kasir</a>
   </div>
 </header>
@@ -91,8 +97,8 @@ input:focus,select:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(224
       <option value="year">Tahun Ini</option>
       <option value="custom">Custom...</option>
     </select>
-    <input type="date" id="dateFrom" style="display:none" onchange="loadData()">
-    <input type="date" id="dateTo" style="display:none" onchange="loadData()">
+    <input type="date" id="dateFrom" style="display:none" onchange="applyPeriod()">
+    <input type="date" id="dateTo" style="display:none" onchange="applyPeriod()">
   </div>
 
   <div class="tabs no-print">
@@ -112,7 +118,7 @@ input:focus,select:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(224
   <div id="gl" class="panel"></div>
   <div id="tb" class="panel"></div>
   
-  <div id="manual" class="panel">
+  <div id="manual" class="panel no-print">
     <div class="card">
       <h3>✍️ Input Jurnal Manual (Beban / Pembelian Aset)</h3>
       <div class="form-grid">
@@ -120,262 +126,240 @@ input:focus,select:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(224
         <div><label>Keterangan</label><input type="text" id="mDesc" placeholder="cth: Bayar Listrik Toko"></div>
         <div><label>Akun Debit</label><select id="mDr"></select></div>
         <div><label>Akun Kredit</label><select id="mCr"></select></div>
-        <div><label>Nominal (Rp)</label><input type="number" id="mAmt" placeholder="0"></div>
+        <div><label>Nominal (Rp)</label><input type="number" id="mAmt" min="0" placeholder="0"></div>
       </div>
-      <button class="btn" onclick="saveManual()">💾 Simpan Jurnal</button>
+      <button class="btn" id="btnSaveManual" onclick="saveManual()">💾 Simpan Jurnal</button>
     </div>
   </div>
 </div>
 
+<script src="i18n.js"></script>
 <script src="firebase-init.js"></script>
 <script>
-rp = n => 'Rp ' + Math.round(n||0).toLocaleString('id-ID');
+const $ = id => document.getElementById(id);
+const LOC = () => (window.SENJA_LANG ? SENJA_LANG.loc() : 'id-ID');
+const T = s => (window.SENJA_LANG ? SENJA_LANG.t(s) : s);
 const accRp = n => n < 0 ? `(${rp(Math.abs(n))})` : rp(n);
-let COA = [], JRN = [], filteredJRN = [];
+const jDate = j => (j.date && j.date.toDate ? j.date.toDate() : new Date(j.date));
+const sum = (arr, f) => arr.reduce((s, x) => s + f(x), 0);
+let COA = [], JRN = [], PERIOD = [], CUM = [];
+
+/* Akun yang dipakai jurnal otomatis kasir. Dipakai kalau koleksi `coa` belum punya akun tsb. */
+const COA_DEFAULT = [
+  ['1101','Kas','Aset','Debit'], ['1102','Bank / E-Wallet','Aset','Debit'], ['1110','Persediaan Bahan','Aset','Debit'],
+  ['2101','Utang Pajak','Kewajiban','Kredit'], ['3101','Modal Pemilik','Ekuitas','Kredit'],
+  ['4101','Pendapatan Kafe','Pendapatan','Kredit'], ['4102','Pendapatan Kamar','Pendapatan','Kredit'], ['4103','Pendapatan Room Service','Pendapatan','Kredit'],
+  ['4104','Pendapatan Laundry','Pendapatan','Kredit'], ['4105','Pendapatan Spa','Pendapatan','Kredit'], ['4106','Pendapatan Minibar','Pendapatan','Kredit'],
+  ['5101','HPP','HPP','Debit'], ['6101','Beban Gaji','Beban','Debit'], ['6102','Beban Listrik & Air','Beban','Debit'], ['6103','Beban Sewa','Beban','Debit'], ['6109','Beban Lain-lain','Beban','Debit']
+].map(([id,nama,tipe,normal]) => ({id, nama, tipe, normal}));
+function inferAcc(code, name){
+  const d = String(code)[0];
+  const [tipe, normal] = d==='1' ? ['Aset','Debit'] : d==='2' ? ['Kewajiban','Kredit'] : d==='3' ? ['Ekuitas','Kredit'] : d==='4' ? ['Pendapatan','Kredit'] : d==='5' ? ['HPP','Debit'] : ['Beban','Debit'];
+  return { id:String(code), nama:name || String(code), tipe, normal };
+}
+function buildCOA(stored, journals){
+  const map = {};
+  (stored.length ? stored : COA_DEFAULT).forEach(c => map[c.id] = c);
+  COA_DEFAULT.forEach(c => { if (/^(1101|1102|1110|2101|410\d|5101)$/.test(c.id) && !map[c.id]) map[c.id] = c; });
+  journals.forEach(j => (j.lines||[]).forEach(l => { if (l.acc && !map[l.acc]) map[l.acc] = inferAcc(l.acc, l.name); }));
+  return Object.values(map).sort((a,b) => String(a.id).localeCompare(String(b.id)));
+}
 
 function showTab(id, el) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  if(el) el.classList.add('active');
+  $(id).classList.add('active');
+  if (el) el.classList.add('active');
 }
-
 function changePeriod() {
-  const val = document.getElementById('periodFilter').value;
-  const from = document.getElementById('dateFrom');
-  const to = document.getElementById('dateTo');
-  if(val === 'custom') { from.style.display='inline-block'; to.style.display='inline-block'; }
-  else { from.style.display='none'; to.style.display='none'; loadData(); }
+  const custom = $('periodFilter').value === 'custom';
+  $('dateFrom').style.display = $('dateTo').style.display = custom ? 'inline-block' : 'none';
+  if (!custom) applyPeriod();
 }
-
+/* Tanggal dari <input type=date> dibaca sebagai tanggal LOKAL (bukan UTC) */
+function localDate(v, endOfDay){
+  const a = String(v).split('-').map(Number);
+  return endOfDay ? new Date(a[0], a[1]-1, a[2], 23, 59, 59, 999) : new Date(a[0], a[1]-1, a[2]);
+}
 function getDateRange() {
-  const val = document.getElementById('periodFilter').value;
-  let start, end;
-  const now = new Date();
-  if(val === 'today') { start = new Date(now.getFullYear(), now.getMonth(), now.getDate()); end = new Date(start); end.setHours(23,59,59); }
-  else if(val === 'month') { start = new Date(now.getFullYear(), now.getMonth(), 1); end = new Date(now.getFullYear(), now.getMonth()+1, 0, 23, 59, 59); }
-  else if(val === 'year') { start = new Date(now.getFullYear(), 0, 1); end = new Date(now.getFullYear(), 11, 31, 23, 59, 59); }
-  else if(val === 'custom') { 
-    start = document.getElementById('dateFrom').value ? new Date(document.getElementById('dateFrom').value) : new Date(2000,0,1);
-    end = document.getElementById('dateTo').value ? new Date(document.getElementById('dateTo').value) : new Date(3000,0,1);
-    end.setHours(23,59,59);
-  }
-  else { start = new Date(2000,0,1); end = new Date(3000,0,1); }
-  return { start, end };
+  const val = $('periodFilter').value, now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  if (val === 'today') return { start: new Date(y, m, now.getDate()), end: new Date(y, m, now.getDate(), 23, 59, 59, 999) };
+  if (val === 'month') return { start: new Date(y, m, 1), end: new Date(y, m+1, 0, 23, 59, 59, 999) };
+  if (val === 'year')  return { start: new Date(y, 0, 1), end: new Date(y, 11, 31, 23, 59, 59, 999) };
+  if (val === 'custom') return {
+    start: $('dateFrom').value ? localDate($('dateFrom').value) : new Date(2000, 0, 1),
+    end:   $('dateTo').value ? localDate($('dateTo').value, true) : new Date(3000, 0, 1)
+  };
+  return { start: new Date(2000, 0, 1), end: new Date(3000, 0, 1) };
 }
 
 async function loadData() {
-  document.getElementById('dashboard').innerHTML = '<div class="loader">⏳ Mengambil data dari cloud...</div>';
+  $('dashboard').innerHTML = '<div class="loader">⏳ Mengambil data dari cloud...</div>';
   try {
-    const coaSnap = await db.collection('coa').orderBy('id').get();
-    COA = coaSnap.docs.map(d => ({id:d.id, ...d.data()}));
-    
-    const jrnSnap = await db.collection('journals').get();
-    JRN = jrnSnap.docs.map(d => ({id:d.id, ...d.data()}));
-    
-    const { start, end } = getDateRange();
-    filteredJRN = JRN.filter(j => {
-      const d = j.date.toDate ? j.date.toDate() : new Date(j.date);
-      return d >= start && d <= end;
-    });
-
-    renderAll();
+    const [coaSnap, jrnSnap] = await Promise.all([db.collection('coa').get(), db.collection('journals').get()]);
+    JRN = jrnSnap.docs.map(d => ({id:d.id, ...d.data()})).filter(j => j.date && Array.isArray(j.lines));
+    COA = buildCOA(coaSnap.docs.map(d => ({id:d.id, ...d.data()})), JRN);
+    applyPeriod();
   } catch(e) {
-    document.getElementById('dashboard').innerHTML = `<div class="card" style="color:var(--red)">❌ Gagal memuat: ${e.message}</div>`;
+    $('dashboard').innerHTML = `<div class="card" style="color:var(--red)">❌ Gagal memuat: ${esc(e.message)}</div>`;
   }
 }
-
-function calcBalances() {
-  const bal = {};
-  COA.forEach(c => bal[c.id] = {...c, debit:0, credit:0});
-  filteredJRN.forEach(j => j.lines.forEach(l => {
-    if(bal[l.acc]) { bal[l.acc].debit += l.debit||0; bal[l.acc].credit += l.credit||0; }
-  }));
-  Object.values(bal).forEach(b => {
-    b.net = b.debit - b.credit;
-    b.final = b.normal === 'Debit' ? b.net : -b.net;
-  });
-  return bal;
+function applyPeriod(){
+  const { start, end } = getDateRange();
+  PERIOD = JRN.filter(j => { const d = jDate(j); return d >= start && d <= end; });   /* arus: laba rugi, jurnal */
+  CUM = JRN.filter(j => jDate(j) <= end);                                            /* saldo s.d. akhir periode: neraca */
+  renderAll();
 }
 
+function balances(journals) {
+  const bal = {};
+  COA.forEach(c => bal[c.id] = {...c, debit:0, credit:0});
+  journals.forEach(j => j.lines.forEach(l => {
+    if (bal[l.acc]) { bal[l.acc].debit += Number(l.debit)||0; bal[l.acc].credit += Number(l.credit)||0; }
+  }));
+  Object.values(bal).forEach(b => { b.net = b.debit - b.credit; b.final = b.normal === 'Debit' ? b.net : -b.net; });
+  return bal;
+}
+const ofType = (bal, t) => Object.values(bal).filter(b => b.tipe === t);
+const total = (bal, t) => sum(ofType(bal, t), b => b.final);
+const profit = bal => total(bal, 'Pendapatan') - total(bal, 'HPP') - total(bal, 'Beban');
+
 function renderAll() {
-  const bal = calcBalances();
-  renderDashboard(bal);
-  renderLabarugi(bal);
-  renderNeraca(bal);
+  const per = balances(PERIOD), cum = balances(CUM);
+  renderDashboard(per, cum);
+  renderLabarugi(per);
+  renderNeraca(cum);
   renderJurnal();
-  renderGL(bal);
-  renderTB(bal);
+  renderGL();
+  renderTB(cum);
   renderManualForm();
 }
 
-function renderDashboard(bal) {
-  const aset = Object.values(bal).filter(b=>b.tipe==='Aset').reduce((s,b)=>s+b.final,0);
-  const kew = Object.values(bal).filter(b=>b.tipe==='Kewajiban').reduce((s,b)=>s+b.final,0);
-  const ek = Object.values(bal).filter(b=>b.tipe==='Ekuitas').reduce((s,b)=>s+b.final,0);
-  const pend = Object.values(bal).filter(b=>b.tipe==='Pendapatan').reduce((s,b)=>s+b.final,0);
-  const hpp = Object.values(bal).filter(b=>b.tipe==='HPP').reduce((s,b)=>s+b.final,0);
-  const beb = Object.values(bal).filter(b=>b.tipe==='Beban').reduce((s,b)=>s+b.final,0);
-  const laba = pend - hpp - beb;
-  const check = Math.round(aset) === Math.round(kew + ek + laba);
-
-  document.getElementById('dashboard').innerHTML = `
+function renderDashboard(per, cum) {
+  const aset = total(cum, 'Aset'), kew = total(cum, 'Kewajiban'), ek = total(cum, 'Ekuitas'), labaCum = profit(cum), laba = profit(per);
+  const check = Math.round(aset) === Math.round(kew + ek + labaCum);
+  $('dashboard').innerHTML = `
     <div class="kpi-grid">
       <div class="kpi blue"><div class="label">Total Aset</div><div class="value">${rp(aset)}</div></div>
       <div class="kpi"><div class="label">Kewajiban & Ekuitas</div><div class="value">${rp(kew+ek)}</div></div>
-      <div class="kpi ${laba>=0?'green':'red'}"><div class="label">Laba Bersih Berjalan</div><div class="value ${laba>=0?'green':'red'}">${rp(laba)}</div></div>
-      <div class="kpi"><div class="label">Total Transaksi</div><div class="value">${filteredJRN.length}</div></div>
+      <div class="kpi ${laba>=0?'green':'red'}"><div class="label">Laba Bersih Periode Ini</div><div class="value ${laba>=0?'green':'red'}">${rp(laba)}</div></div>
+      <div class="kpi"><div class="label">Jumlah Jurnal</div><div class="value">${PERIOD.length}</div></div>
     </div>
     <div class="card">
       <h3>⚖️ Validasi Persamaan Dasar Akuntansi</h3>
-      <p style="font-size:15px;line-height:1.6">Aset (<b>${rp(aset)}</b>) ${check ? '<span class="badge b-pos">SEIMBANG ✓</span>' : '<span class="badge b-neg">SELISIH! Periksa Jurnal</span>'} Kewajiban + Ekuitas + Laba (<b>${rp(kew+ek+laba)}</b>)</p>
+      <p style="font-size:15px;line-height:1.6">Aset (<b>${rp(aset)}</b>) ${check ? '<span class="badge b-pos">SEIMBANG ✓</span>' : '<span class="badge b-neg">SELISIH! Periksa Jurnal</span>'} Kewajiban + Ekuitas + Laba (<b>${rp(kew+ek+labaCum)}</b>)</p>
     </div>`;
 }
 
 function renderLabarugi(bal) {
-  const pend = Object.values(bal).filter(b=>b.tipe==='Pendapatan');
-  const hpp = Object.values(bal).filter(b=>b.tipe==='HPP');
-  const beb = Object.values(bal).filter(b=>b.tipe==='Beban');
-  const tPend = pend.reduce((s,b)=>s+b.final,0);
-  const tHpp = hpp.reduce((s,b)=>s+b.final,0);
-  const tBeb = beb.reduce((s,b)=>s+b.final,0);
-  const labaKotor = tPend - tHpp;
-  const labaBersih = labaKotor - tBeb;
-
-  document.getElementById('labarugi').innerHTML = `
+  const pend = ofType(bal,'Pendapatan'), hpp = ofType(bal,'HPP'), beb = ofType(bal,'Beban');
+  const tPend = total(bal,'Pendapatan'), tHpp = total(bal,'HPP'), tBeb = total(bal,'Beban');
+  const labaKotor = tPend - tHpp, labaBersih = labaKotor - tBeb;
+  const row = (b, v) => `<tr><td class="indent no-i18n">${esc(b.nama)}</td><td class="num">${accRp(v)}</td><td></td></tr>`;
+  const hl = v => `background:${v>=0?'#e4f0e8':'#fbe9e5'};color:${v>=0?'var(--green)':'var(--red)'}`;
+  $('labarugi').innerHTML = `
     <div class="card"><h3>📈 Laporan Laba Rugi</h3>
-    <table>
+    <div style="overflow-x:auto"><table>
       <thead><tr><th>Uraian</th><th class="num">Nominal</th><th class="num">Total</th></tr></thead>
       <tbody>
         <tr class="row-subtotal"><td>PENDAPATAN</td><td></td><td></td></tr>
-        ${pend.map(p=>`<tr><td class="indent">${p.nama}</td><td class="num">${accRp(p.final)}</td><td></td></tr>`).join('')}
+        ${pend.map(p=>row(p, p.final)).join('')}
         <tr class="row-total"><td>Total Pendapatan</td><td></td><td class="num">${rp(tPend)}</td></tr>
-        
         <tr class="row-subtotal"><td>HARGA POKOK PENJUALAN (HPP)</td><td></td><td></td></tr>
-        ${hpp.map(h=>`<tr><td class="indent">${h.nama}</td><td class="num">${accRp(-h.final)}</td><td></td></tr>`).join('')}
+        ${hpp.map(h=>row(h, -h.final)).join('')}
         <tr class="row-total"><td>Total HPP</td><td></td><td class="num">${accRp(-tHpp)}</td></tr>
-        
-        <tr class="row-total" style="background:${labaKotor>=0?'#e4f0e8':'#fbe9e5'};color:${labaKotor>=0?'var(--green)':'var(--red)'}"><td>LABA KOTOR</td><td></td><td class="num">${rp(labaKotor)}</td></tr>
-        
+        <tr class="row-total" style="${hl(labaKotor)}"><td>LABA KOTOR</td><td></td><td class="num">${rp(labaKotor)}</td></tr>
         <tr class="row-subtotal"><td>BEBAN OPERASIONAL</td><td></td><td></td></tr>
-        ${beb.map(b=>`<tr><td class="indent">${b.nama}</td><td class="num">${accRp(-b.final)}</td><td></td></tr>`).join('')}
+        ${beb.map(b=>row(b, -b.final)).join('')}
         <tr class="row-total"><td>Total Beban</td><td></td><td class="num">${accRp(-tBeb)}</td></tr>
-        
-        <tr class="row-total" style="background:${labaBersih>=0?'#e4f0e8':'#fbe9e5'};color:${labaBersih>=0?'var(--green)':'var(--red)'};font-size:18px"><td>LABA BERSIH</td><td></td><td class="num">${rp(labaBersih)}</td></tr>
+        <tr class="row-total" style="${hl(labaBersih)};font-size:18px"><td>LABA BERSIH</td><td></td><td class="num">${rp(labaBersih)}</td></tr>
       </tbody>
-    </table></div>`;
+    </table></div></div>`;
 }
 
 function renderNeraca(bal) {
-  const aset = Object.values(bal).filter(b=>b.tipe==='Aset');
-  const kew = Object.values(bal).filter(b=>b.tipe==='Kewajiban');
-  const ek = Object.values(bal).filter(b=>b.tipe==='Ekuitas');
-  const laba = Object.values(bal).filter(b=>b.tipe==='Pendapatan').reduce((s,b)=>s+b.final,0) - 
-             Object.values(bal).filter(b=>b.tipe==='HPP').reduce((s,b)=>s+b.final,0) - 
-             Object.values(bal).filter(b=>b.tipe==='Beban').reduce((s,b)=>s+b.final,0);
-
-  const totAset = aset.reduce((s,b)=>s+b.final,0);
-  const totKew = kew.reduce((s,b)=>s+b.final,0);
-  const totEk = ek.reduce((s,b)=>s+b.final,0) + laba;
-
-  document.getElementById('neraca').innerHTML = `
-    <div class="card"><h3>⚖️ Neraca (Balance Sheet)</h3>
-    <table>
+  const aset = ofType(bal,'Aset'), kew = ofType(bal,'Kewajiban'), ek = ofType(bal,'Ekuitas'), laba = profit(bal);
+  const totAset = total(bal,'Aset'), totKE = total(bal,'Kewajiban') + total(bal,'Ekuitas') + laba;
+  const { end } = getDateRange();
+  const per = end.getFullYear() < 2999 ? ' · per ' + end.toLocaleDateString(LOC(), {day:'numeric', month:'short', year:'numeric'}) : '';
+  $('neraca').innerHTML = `
+    <div class="card"><h3>⚖️ Neraca (Balance Sheet)<small class="muted-sm">${per}</small></h3>
+    <div style="overflow-x:auto"><table>
       <thead><tr><th>Aset</th><th class="num">Nominal</th><th style="width:30px"></th><th>Kewajiban & Ekuitas</th><th class="num">Nominal</th></tr></thead>
       <tbody>
-        ${aset.map(a=>`<tr><td>${a.nama}</td><td class="num">${rp(a.final)}</td><td></td><td></td><td></td></tr>`).join('')}
-        <tr class="row-total"><td>TOTAL ASET</td><td class="num">${rp(totAset)}</td><td></td><td></td><td></td></tr>
+        ${aset.map(a=>`<tr><td class="no-i18n">${esc(a.nama)}</td><td class="num">${accRp(a.final)}</td><td></td><td></td><td></td></tr>`).join('')}
+        <tr class="row-total"><td>TOTAL ASET</td><td class="num">${accRp(totAset)}</td><td></td><td></td><td></td></tr>
         <tr><td colspan="5" style="height:20px"></td></tr>
-        ${kew.map(k=>`<tr><td></td><td></td><td></td><td>${k.nama}</td><td class="num">${rp(k.final)}</td></tr>`).join('')}
-        ${ek.map(e=>`<tr><td></td><td></td><td></td><td>${e.nama}</td><td class="num">${rp(e.final)}</td></tr>`).join('')}
-        <tr><td></td><td></td><td></td><td>Laba Berjalan</td><td class="num">${rp(laba)}</td></tr>
-        <tr class="row-total"><td></td><td></td><td></td><td>TOTAL KEWAJIBAN & EKUITAS</td><td class="num">${rp(totKew+totEk)}</td></tr>
+        ${[...kew, ...ek].map(k=>`<tr><td></td><td></td><td></td><td class="no-i18n">${esc(k.nama)}</td><td class="num">${accRp(k.final)}</td></tr>`).join('')}
+        <tr><td></td><td></td><td></td><td>Laba Berjalan</td><td class="num">${accRp(laba)}</td></tr>
+        <tr class="row-total"><td></td><td></td><td></td><td>TOTAL KEWAJIBAN & EKUITAS</td><td class="num">${accRp(totKE)}</td></tr>
       </tbody>
-    </table></div>`;
+    </table></div></div>`;
 }
 
 function renderJurnal() {
-  const sorted = [...filteredJRN].sort((a,b) => {
-    const da = a.date.toDate ? a.date.toDate() : new Date(a.date);
-    const db = b.date.toDate ? b.date.toDate() : new Date(b.date);
-    return db - da;
-  });
-  
-  if(!sorted.length) { document.getElementById('jurnal').innerHTML = '<div class="empty">Belum ada jurnal pada periode ini.</div>'; return; }
-
-  document.getElementById('jurnal').innerHTML = `
+  const sorted = [...PERIOD].sort((a,b) => jDate(b) - jDate(a));
+  if (!sorted.length) { $('jurnal').innerHTML = '<div class="empty">Belum ada jurnal pada periode ini.</div>'; return; }
+  $('jurnal').innerHTML = `
     <div class="card"><h3>📖 Jurnal Umum</h3>
     <div style="overflow-x:auto"><table>
       <thead><tr><th>Tanggal</th><th>No. Ref</th><th>Keterangan</th><th>Akun</th><th class="num">Debit</th><th class="num">Kredit</th></tr></thead>
       <tbody>
-        ${sorted.map(j => {
-          const d = j.date.toDate ? j.date.toDate() : new Date(j.date);
-          return `
-          <tr style="background:#fbf7ec;font-weight:700"><td>${d.toLocaleDateString('id-ID')}</td><td>${j.no}</td><td>${j.desc}</td><td></td><td></td><td></td></tr>
-          ${j.lines.map((l,i) => `
-            <tr><td></td><td></td><td></td><td class="indent">${l.name}</td><td class="num">${l.debit?rp(l.debit):'-'}</td><td class="num">${l.credit?rp(l.credit):'-'}</td></tr>
-          `).join('')}
-        `}).join('')}
+        ${sorted.map(j => `
+          <tr style="background:#fbf7ec;font-weight:700"><td>${jDate(j).toLocaleDateString(LOC())}</td><td>${esc(j.no)}</td><td class="no-i18n">${esc(j.desc)}</td><td></td><td></td><td></td></tr>
+          ${j.lines.map(l => `<tr><td></td><td></td><td></td><td class="indent no-i18n">${esc(l.name)}</td><td class="num">${l.debit?rp(l.debit):'-'}</td><td class="num">${l.credit?rp(l.credit):'-'}</td></tr>`).join('')}
+        `).join('')}
       </tbody>
     </table></div></div>`;
 }
 
 function renderGL() {
-  document.getElementById('gl').innerHTML = `
+  const cur = $('glSelect') ? $('glSelect').value : '';
+  $('gl').innerHTML = `
     <div class="card">
       <h3>📘 Buku Besar (General Ledger)</h3>
-      <select id="glSelect" onchange="showGL()" style="margin-bottom:15px;max-width:400px">
-        <option value="">-- Pilih Akun --</option>
-        ${COA.map(c => `<option value="${c.id}">${c.id} - ${c.nama}</option>`).join('')}
+      <select id="glSelect" class="no-i18n" onchange="showGL()" style="margin-bottom:15px;max-width:400px">
+        <option value="">-- ${esc(T('Pilih Akun'))} --</option>
+        ${COA.map(c => `<option value="${esc(c.id)}" ${c.id===cur?'selected':''}>${esc(c.id)} - ${esc(c.nama)}</option>`).join('')}
       </select>
       <div id="glTable"></div>
     </div>`;
+  if (cur) showGL();
 }
-
 function showGL() {
-  const id = document.getElementById('glSelect').value;
-  if(!id) return document.getElementById('glTable').innerHTML = '';
+  const id = $('glSelect').value;
+  if (!id) { $('glTable').innerHTML = ''; return; }
   const acc = COA.find(c => c.id === id);
-  const jrn = filteredJRN.filter(j => j.lines.some(l => l.acc === id)).sort((a,b) => {
-    const da = a.date.toDate ? a.date.toDate() : new Date(a.date);
-    const db = b.date.toDate ? b.date.toDate() : new Date(b.date);
-    return da - db;
-  });
-  let run = 0;
-  
-  document.getElementById('glTable').innerHTML = `
+  const { start } = getDateRange();
+  /* saldo awal = semua mutasi sebelum periode, lalu mutasi periode berjalan */
+  const net = l => (Number(l.debit)||0) - (Number(l.credit)||0);
+  const sign = acc.normal === 'Debit' ? 1 : -1;
+  let run = sign * sum(JRN.filter(j => jDate(j) < start), j => sum(j.lines.filter(l => l.acc === id), net));
+  const rows = PERIOD.filter(j => j.lines.some(l => l.acc === id)).sort((a,b) => jDate(a) - jDate(b));
+  $('glTable').innerHTML = `
     <div style="overflow-x:auto"><table>
       <thead><tr><th>Tanggal</th><th>Keterangan</th><th class="num">Debit</th><th class="num">Kredit</th><th class="num">Saldo</th></tr></thead>
       <tbody>
-        ${jrn.map(j => {
-          const line = j.lines.find(l => l.acc === id);
-          const net = (line.debit||0) - (line.credit||0);
-          run += (acc.normal === 'Debit' ? net : -net);
-          const d = j.date.toDate ? j.date.toDate() : new Date(j.date);
-          return `<tr><td>${d.toLocaleDateString('id-ID')}</td><td>${j.desc}</td><td class="num">${rp(line.debit||0)}</td><td class="num">${rp(line.credit||0)}</td><td class="num" style="font-weight:700">${rp(run)}</td></tr>`;
-        }).join('')}
+        <tr><td></td><td>Saldo awal</td><td></td><td></td><td class="num" style="font-weight:700">${accRp(run)}</td></tr>
+        ${rows.map(j => j.lines.filter(l => l.acc === id).map(l => {
+          run += sign * net(l);
+          return `<tr><td>${jDate(j).toLocaleDateString(LOC())}</td><td class="no-i18n">${esc(j.desc)}</td><td class="num">${rp(l.debit)}</td><td class="num">${rp(l.credit)}</td><td class="num" style="font-weight:700">${accRp(run)}</td></tr>`;
+        }).join('')).join('')}
       </tbody>
     </table></div>`;
 }
 
 function renderTB(bal) {
-  let totDr = 0, totCr = 0;
-  Object.values(bal).forEach(b => {
-    if(b.net > 0) totDr += b.net; else totCr += Math.abs(b.net);
-  });
-  document.getElementById('tb').innerHTML = `
+  const rows = Object.values(bal).filter(b => Math.round(b.net) !== 0);
+  const totDr = sum(rows, b => b.net > 0 ? b.net : 0), totCr = sum(rows, b => b.net < 0 ? -b.net : 0);
+  $('tb').innerHTML = `
     <div class="card"><h3>⚖️ Neraca Saldo (Trial Balance)</h3>
     <div style="overflow-x:auto"><table>
       <thead><tr><th>Kode</th><th>Nama Akun</th><th class="num">Debit</th><th class="num">Kredit</th></tr></thead>
       <tbody>
-        ${Object.values(bal).filter(b=>b.net!==0).map(b => `
-          <tr><td>${b.id}</td><td>${b.nama}</td><td class="num">${b.net>0?rp(b.net):'-'}</td><td class="num">${b.net<0?rp(Math.abs(b.net)):'-'}</td></tr>
-        `).join('')}
-        <tr class="row-total">
-          <td colspan="2">TOTAL</td>
-          <td class="num">${rp(totDr)}</td>
-          <td class="num">${rp(totCr)}</td>
-        </tr>
+        ${rows.map(b => `<tr><td>${esc(b.id)}</td><td class="no-i18n">${esc(b.nama)}</td><td class="num">${b.net>0?rp(b.net):'-'}</td><td class="num">${b.net<0?rp(-b.net):'-'}</td></tr>`).join('')}
+        <tr class="row-total"><td colspan="2">TOTAL</td><td class="num">${rp(totDr)}</td><td class="num">${rp(totCr)}</td></tr>
         <tr><td colspan="4" style="text-align:center;padding:15px">
           ${Math.round(totDr) === Math.round(totCr) ? '<span class="badge b-pos">SEIMBANG ✓</span>' : '<span class="badge b-neg">SELISIH! Periksa Jurnal.</span>'}
         </td></tr>
@@ -384,125 +368,93 @@ function renderTB(bal) {
 }
 
 function renderManualForm() {
-  const dr = document.getElementById('mDr');
-  const cr = document.getElementById('mCr');
-  dr.innerHTML = COA.map(c => `<option value="${c.id}">${c.id} - ${c.nama}</option>`).join('');
-  cr.innerHTML = COA.map(c => `<option value="${c.id}">${c.id} - ${c.nama}</option>`).join('');
-  document.getElementById('mDate').valueAsDate = new Date();
+  const opts = COA.map(c => `<option value="${esc(c.id)}">${esc(c.id)} - ${esc(c.nama)}</option>`).join('');
+  const dr = $('mDr').value, cr = $('mCr').value;
+  $('mDr').innerHTML = opts; $('mCr').innerHTML = opts;
+  if (dr) $('mDr').value = dr;
+  if (cr) $('mCr').value = cr;
+  if (!$('mDate').value) $('mDate').value = ymdLocal(new Date());
 }
+function ymdLocal(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 
 async function saveManual() {
-  const date = new Date(document.getElementById('mDate').value);
-  const desc = document.getElementById('mDesc').value;
-  const drAcc = document.getElementById('mDr').value;
-  const crAcc = document.getElementById('mCr').value;
-  const amt = parseFloat(document.getElementById('mAmt').value);
-  
-  if(!desc || !amt || drAcc === crAcc) return alert('Lengkapi data dan pastikan akun Debit != Kredit');
-  
-  const drName = COA.find(c=>c.id===drAcc).nama;
-  const crName = COA.find(c=>c.id===crAcc).nama;
-  const no = 'MAN-' + Date.now().toString().slice(-6);
-  
-  await db.collection('journals').add({
-    no, date: firebase.firestore.Timestamp.fromDate(date),
-    desc, source: 'MANUAL',
-    lines: [
-      {acc: drAcc, name: drName, debit: amt, credit: 0},
-      {acc: crAcc, name: crName, debit: 0, credit: amt}
-    ]
-  });
-  alert('Jurnal Manual berhasil disimpan!');
-  loadData();
+  const dateVal = $('mDate').value, desc = $('mDesc').value.trim();
+  const drAcc = $('mDr').value, crAcc = $('mCr').value, amt = Math.round(parseFloat($('mAmt').value) || 0);
+  if (!dateVal || !desc || amt <= 0) return alert('Isi tanggal, keterangan, dan nominal lebih dari 0.');
+  if (drAcc === crAcc) return alert('Akun Debit dan Kredit harus berbeda.');
+  const dr = COA.find(c=>c.id===drAcc), cr = COA.find(c=>c.id===crAcc);
+  if (!confirm('Simpan jurnal: ' + dr.nama + ' (D) / ' + cr.nama + ' (K) ' + rp(amt) + '?')) return;
+  const date = localDate(dateVal); date.setHours(12);
+  const btn = $('btnSaveManual'); btn.disabled = true;
+  try {
+    await db.collection('journals').add({
+      no: 'MAN-' + Date.now().toString(36).toUpperCase(), date: firebase.firestore.Timestamp.fromDate(date),
+      desc, source: 'MANUAL', user: (currentUser()||{}).nama || '',
+      lines: [ {acc: drAcc, name: dr.nama, debit: amt, credit: 0}, {acc: crAcc, name: cr.nama, debit: 0, credit: amt} ]
+    });
+    $('mDesc').value = ''; $('mAmt').value = '';
+    alert('Jurnal manual tersimpan.');
+    loadData();
+  } catch (e) { alert('Gagal menyimpan: ' + e.message); }
+  finally { btn.disabled = false; }
 }
 
+/* ===== Export ===== */
+const stamp = () => ymdLocal(new Date());
+const periodLabel = () => $('periodFilter').selectedOptions[0].textContent.trim();
+function download(name, blob){
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
 function exportCSV() {
-  const bal = calcBalances();
-  let csv = 'Kode,Nama Akun,Tipe,Normal,Debit,Kredit,Saldo Akhir\n';
-  Object.values(bal).forEach(b => {
-    csv += `${b.id},"${b.nama}",${b.tipe},${b.normal},${b.debit},${b.credit},${b.final}\n`;
-  });
-  const blob = new Blob([csv], {type:'text/csv'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `Neraca_Saldo_SENJA_POS_${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
+  const q = v => '"' + String(v).replace(/"/g, '""') + '"';
+  const rows = [['Kode','Nama Akun','Tipe','Normal','Debit','Kredit','Saldo Akhir']];
+  Object.values(balances(CUM)).forEach(b => rows.push([b.id, b.nama, b.tipe, b.normal, b.debit, b.credit, b.final]));
+  download(`Neraca_Saldo_${stamp()}.csv`, new Blob(['﻿' + rows.map(r => r.map(q).join(',')).join('\n')], {type:'text/csv;charset=utf-8'}));
 }
-
-/* ===== Export PDF (jsPDF) ===== */
 function exportPDF() {
-  const bal = calcBalances();
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+  if (!window.jspdf) return alert('Modul PDF belum termuat. Cek koneksi internet lalu muat ulang halaman.');
+  const per = balances(PERIOD), cum = balances(CUM);
+  const doc = new window.jspdf.jsPDF();
   let y = 15;
   const line = (text, size=10, bold=false) => {
     if (y > 280) { doc.addPage(); y = 15; }
-    doc.setFontSize(size);
-    doc.setFont(undefined, bold ? 'bold' : 'normal');
-    doc.text(String(text), 14, y);
+    doc.setFontSize(size); doc.setFont(undefined, bold ? 'bold' : 'normal');
+    doc.text(String(text).replace(/[^\x20-\x7e]/g, ''), 14, y);
     y += size >= 14 ? 8 : 6;
   };
-
-  line('SENJA POS — Laporan Keuangan', 16, true);
-  line('Dicetak: ' + new Date().toLocaleString('id-ID'), 9);
-  y += 4;
-
-  line('NERACA SALDO (TRIAL BALANCE)', 12, true);
-  let totDr = 0, totCr = 0;
-  Object.values(bal).filter(b=>b.net!==0).forEach(b=>{
-    const dr = b.net>0 ? b.net : 0, cr = b.net<0 ? Math.abs(b.net) : 0;
-    totDr += dr; totCr += cr;
-    line(b.id + '  ' + b.nama + '   D:' + rp(dr) + '  K:' + rp(cr), 9);
-  });
-  line('TOTAL:  D:' + rp(totDr) + '  K:' + rp(totCr) + (Math.round(totDr)===Math.round(totCr)?'  (SEIMBANG)':'  (SELISIH!)'), 10, true);
-  y += 6;
-
-  const pend = Object.values(bal).filter(b=>b.tipe==='Pendapatan').reduce((s,b)=>s+b.final,0);
-  const hpp = Object.values(bal).filter(b=>b.tipe==='HPP').reduce((s,b)=>s+b.final,0);
-  const beb = Object.values(bal).filter(b=>b.tipe==='Beban').reduce((s,b)=>s+b.final,0);
-  const laba = pend - hpp - beb;
-  line('LAPORAN LABA / RUGI', 12, true);
-  line('Total Pendapatan: ' + rp(pend), 10);
-  line('Total HPP: (' + rp(hpp) + ')', 10);
-  line('Total Beban: (' + rp(beb) + ')', 10);
-  line('LABA BERSIH: ' + rp(laba), 11, true);
-  y += 6;
-
-  const aset = Object.values(bal).filter(b=>b.tipe==='Aset').reduce((s,b)=>s+b.final,0);
-  const kew = Object.values(bal).filter(b=>b.tipe==='Kewajiban').reduce((s,b)=>s+b.final,0);
-  const ek = Object.values(bal).filter(b=>b.tipe==='Ekuitas').reduce((s,b)=>s+b.final,0);
-  line('NERACA (BALANCE SHEET)', 12, true);
-  line('Total Aset: ' + rp(aset), 10);
-  line('Total Kewajiban + Ekuitas + Laba: ' + rp(kew+ek+laba), 10);
-
-  doc.save('Laporan_Keuangan_SENJA_POS_' + new Date().toISOString().slice(0,10) + '.pdf');
+  line('Laporan Keuangan - ' + periodLabel(), 16, true);
+  line('Dicetak: ' + new Date().toLocaleString('id-ID'), 9); y += 4;
+  line('NERACA SALDO', 12, true);
+  const rows = Object.values(cum).filter(b => Math.round(b.net) !== 0);
+  rows.forEach(b => line(b.id + '  ' + b.nama + '   D: ' + rp(Math.max(b.net,0)) + '   K: ' + rp(Math.max(-b.net,0)), 9));
+  const dr = sum(rows, b => Math.max(b.net,0)), cr = sum(rows, b => Math.max(-b.net,0));
+  line('TOTAL  D: ' + rp(dr) + '   K: ' + rp(cr) + (Math.round(dr)===Math.round(cr) ? '  (SEIMBANG)' : '  (SELISIH!)'), 10, true); y += 6;
+  line('LABA / RUGI', 12, true);
+  line('Pendapatan: ' + rp(total(per,'Pendapatan')), 10);
+  line('HPP: (' + rp(total(per,'HPP')) + ')', 10);
+  line('Beban: (' + rp(total(per,'Beban')) + ')', 10);
+  line('LABA BERSIH: ' + rp(profit(per)), 11, true); y += 6;
+  line('NERACA', 12, true);
+  line('Total Aset: ' + rp(total(cum,'Aset')), 10);
+  line('Kewajiban + Ekuitas + Laba: ' + rp(total(cum,'Kewajiban') + total(cum,'Ekuitas') + profit(cum)), 10);
+  doc.save(`Laporan_Keuangan_${stamp()}.pdf`);
 }
-
-/* ===== Export Excel (SheetJS) ===== */
 function exportExcel() {
-  const bal = calcBalances();
+  if (!window.XLSX) return alert('Modul Excel belum termuat. Cek koneksi internet lalu muat ulang halaman.');
   const wb = XLSX.utils.book_new();
-
-  const tbData = [['Kode','Nama Akun','Tipe','Debit','Kredit']];
-  Object.values(bal).filter(b=>b.net!==0).forEach(b=>{
-    tbData.push([b.id, b.nama, b.tipe, b.net>0?b.net:0, b.net<0?Math.abs(b.net):0]);
-  });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(tbData), 'Neraca Saldo');
-
-  const jrnData = [['Tanggal','No. Ref','Keterangan','Akun','Debit','Kredit']];
-  filteredJRN.forEach(j=>{
-    const d = j.date.toDate ? j.date.toDate() : new Date(j.date);
-    j.lines.forEach(l=>{
-      jrnData.push([d.toLocaleDateString('id-ID'), j.no, j.desc, l.name, l.debit||0, l.credit||0]);
-    });
-  });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(jrnData), 'Jurnal Umum');
-
-  XLSX.writeFile(wb, 'Laporan_Keuangan_SENJA_POS_' + new Date().toISOString().slice(0,10) + '.xlsx');
+  const tb = [['Kode','Nama Akun','Tipe','Debit','Kredit']];
+  Object.values(balances(CUM)).filter(b => Math.round(b.net) !== 0).forEach(b => tb.push([b.id, b.nama, b.tipe, Math.max(b.net,0), Math.max(-b.net,0)]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(tb), 'Neraca Saldo');
+  const jr = [['Tanggal','No. Ref','Keterangan','Akun','Debit','Kredit']];
+  PERIOD.slice().sort((a,b) => jDate(a) - jDate(b)).forEach(j => j.lines.forEach(l => jr.push([jDate(j).toLocaleDateString('id-ID'), j.no, j.desc, l.name, Number(l.debit)||0, Number(l.credit)||0])));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(jr), 'Jurnal Umum');
+  XLSX.writeFile(wb, `Laporan_Keuangan_${stamp()}.xlsx`);
 }
 
-loadData();
+window.addEventListener('senja-lang', () => { if (JRN.length || COA.length) renderAll(); });
+guardPage({admin:true}).then(loadData);
 </script>
-<link rel="stylesheet" href="deai.css">
 <script src="deai.js"></script>
 </body></html>
