@@ -77,6 +77,8 @@ function pinHash(pin){
 
 const $ = id => document.getElementById(id);
 const auth = firebase.auth();
+/* Membuka halaman login = sesi sebelumnya berakhir; login baru menunggu ini selesai */
+const SIGNED_OUT = auth.signOut().catch(()=>{});
 let PIN = '', BUSY = false, TIMER = null, THR_SHOWN = false;
 const LS = {
   get(k,d){ try{ const v = localStorage.getItem(k); return v==null ? d : JSON.parse(v); }catch(e){ return d; } },
@@ -135,6 +137,7 @@ async function login(){
   if(!/^\d{4,8}$/.test(pin)){ say('PIN 4–8 angka.', 'err'); return; }
   BUSY = true; applyThrottle(); say('Memeriksa…');
   try{
+    await SIGNED_OUT;
     let uid, profile;
     const lg = await db.collection('logins').doc(username).get();
     if(lg.exists){
@@ -203,10 +206,9 @@ document.addEventListener('keydown', e=>{
 });
 
 (async function init(){
-  /* Membuka halaman login = sesi sebelumnya berakhir */
-  try{ await auth.signOut(); }catch(e){}
-  try{ if(typeof logoutUser==='function') logoutUser(); }catch(e){}
   buildPad(); dots();
+  await SIGNED_OUT;
+  try{ if(typeof logoutUser==='function') logoutUser(); }catch(e){}
   try{
     const pub = await db.collection('settings').doc('public').get();
     if(pub.exists && pub.data().nama){ $('storeName').textContent = pub.data().nama; document.title = 'Masuk — SENJA POS · '+pub.data().nama; }
