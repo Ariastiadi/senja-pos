@@ -72,7 +72,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 @media print{header,.tabs,.no-print,.toolbar{display:none!important}.panel{display:block!important}.card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}}
 @media(max-width:768px){.kpi-grid{grid-template-columns:1fr 1fr}.kpi .value{font-size:20px}}
 </style>
-<link rel="stylesheet" href="deai.css">
+<link rel="stylesheet" href="deai.css?v=12.2">
 </head><body>
 
 <header>
@@ -133,8 +133,8 @@ button:disabled{opacity:.5;cursor:not-allowed}
   </div>
 </div>
 
-<script src="i18n.js"></script>
-<script src="firebase-init.js"></script>
+<script src="i18n.js?v=12.2"></script>
+<script src="firebase-init.js?v=12.2"></script>
 <script>
 const $ = id => document.getElementById(id);
 const LOC = () => (window.SENJA_LANG ? SENJA_LANG.loc() : 'id-ID');
@@ -456,5 +456,5 @@ function exportExcel() {
 window.addEventListener('senja-lang', () => { if (JRN.length || COA.length) renderAll(); });
 guardPage({admin:true}).then(loadData);
 </script>
-<script src="deai.js"></script>
+<script src="deai.js?v=12.2"></script>
 </body></html>
