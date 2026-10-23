@@ -1592,7 +1592,7 @@ function taxTxt(t){
   return lbl+' '+rate+'%';
 }
 function applyStore(){
-  document.title = (STORE.nama||'SENJA POS') + ' — Kasir';
+  document.title = 'SENJA POS' + (STORE.nama ? ' · ' + STORE.nama : '');
   $('taxLbl').textContent = (STORE.pajak_label||'Pajak') + ' (' + (Number(STORE.pajak)||0) + '%)';
   $('taxRow').style.display = (Number(STORE.pajak)||0) > 0 ? '' : 'none';
   const hotelOn = STORE.hotel !== false;
