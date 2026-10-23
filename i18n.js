@@ -298,9 +298,14 @@
   }
   function paint(){
     document.documentElement.lang = lang;
-    var bs = document.querySelectorAll('[data-lang-btn]');
-    for(var i=0;i<bs.length;i++) bs[i].textContent = '🌐 ' + (lang==='en' ? 'EN' : 'ID');
+    var bs = document.querySelectorAll('[data-lang-switch] button');
+    for(var i=0;i<bs.length;i++){ var on = bs[i].getAttribute('data-l')===lang; bs[i].classList.toggle('on', on); bs[i].setAttribute('aria-pressed', on ? 'true' : 'false'); }
   }
+  /* tombol ID | EN di semua halaman */
+  document.addEventListener('click', function(e){
+    var b = e.target && e.target.closest ? e.target.closest('[data-lang-switch] button') : null;
+    if(b && b.getAttribute('data-l') !== lang) window.SENJA_LANG.set(b.getAttribute('data-l'));
+  });
 
   /* dialog bawaan browser ikut diterjemahkan */
   var _c = window.confirm, _p = window.prompt, _a = window.alert;

@@ -82,7 +82,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
     <button class="btn btn-outline no-print" onclick="exportExcel()">📊 Export Excel</button>
     <button class="btn btn-outline no-print" onclick="exportCSV()">📥 Export CSV</button>
     <button class="btn btn-outline no-print" onclick="window.print()">🖨️ Cetak</button>
-    <button class="btn btn-outline no-i18n" data-lang-btn onclick="window.SENJA_LANG && SENJA_LANG.toggle()">🌐 ID</button>
+    <div class="lang-switch no-i18n" data-lang-switch role="group" aria-label="Bahasa / Language"><button type="button" data-l="id">ID</button><button type="button" data-l="en">EN</button></div>
     <a href="index.html" class="btn btn-ghost">← Kembali ke Kasir</a>
   </div>
 </header>

@@ -1592,7 +1592,6 @@ function taxTxt(t){
   return lbl+' '+rate+'%';
 }
 function applyStore(){
-  $('brandName').textContent = STORE.nama || 'SENJA POS';
   document.title = (STORE.nama||'SENJA POS') + ' — Kasir';
   $('taxLbl').textContent = (STORE.pajak_label||'Pajak') + ' (' + (Number(STORE.pajak)||0) + '%)';
   $('taxRow').style.display = (Number(STORE.pajak)||0) > 0 ? '' : 'none';

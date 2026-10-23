@@ -39,11 +39,10 @@ label{display:block;font-size:11.5px;font-weight:800;letter-spacing:.8px;text-tr
 .foot{margin-top:18px;text-align:center;font-size:11.5px;color:#8a7d6a;line-height:1.6}
 @keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
 .shake{animation:shake .35s}
-.lang-btn{position:fixed;top:calc(14px + env(safe-area-inset-top,0px));right:14px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);color:#e8d9c2;border-radius:10px;padding:7px 12px;font-weight:800;font-size:12.5px}
 </style>
 <link rel="stylesheet" href="deai.css">
 </head><body>
-<button class="lang-btn no-i18n" data-lang-btn onclick="window.SENJA_LANG && SENJA_LANG.toggle()">🌐 ID</button>
+<div class="lang-switch lang-fixed no-i18n" data-lang-switch role="group" aria-label="Bahasa / Language"><button type="button" data-l="id">ID</button><button type="button" data-l="en">EN</button></div>
 <div class="wrap" id="wrap">
   <div class="brand">
     <div class="badge">☕</div>

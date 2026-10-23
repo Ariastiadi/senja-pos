@@ -53,3 +53,8 @@ summary .ic{width:16px;height:16px}
 .panel,.modal{border-radius:16px}
 .card{border-radius:14px}
 .cat-chip,.head-btn,.chip{border-radius:10px}
+/* --- 5. Pilihan bahasa ID | EN (semua halaman) --- */
+.lang-switch{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.1);flex-shrink:0}
+.lang-switch button{font:800 12px/1 var(--mono,monospace);letter-spacing:.5px;padding:7px 9px;border-radius:7px;color:#b8a892;background:none;border:none;cursor:pointer;touch-action:manipulation}
+.lang-switch button.on{background:linear-gradient(150deg,#f2a950,var(--amber-deep,#b8611a));color:#2a1708}
+.lang-switch.lang-fixed{position:fixed;top:calc(14px + env(safe-area-inset-top,0px));right:14px;z-index:5}
